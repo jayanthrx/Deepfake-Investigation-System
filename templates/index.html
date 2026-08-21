@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>
+Deepfake Investigation System
+</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+
+<style>
+
+
+body{
+
+font-family:Arial, sans-serif;
+background:#f2f5f9;
+text-align:center;
+
+}
+
+
+
+/* NAVIGATION */
+
+nav{
+
+background:#1a237e;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+
+}
+
+
+
+nav a{
+
+color:white;
+text-decoration:none;
+margin:15px;
+font-size:18px;
+font-weight:bold;
+
+}
+
+
+
+nav a:hover{
+
+color:#ffeb3b;
+
+}
+
+
+
+
+.container{
+
+margin:40px auto;
+width:90%;
+max-width:750px;
+background:white;
+padding:30px;
+border-radius:15px;
+box-shadow:0 0 15px #ccc;
+
+}
+
+
+
+
+
+h1{
+
+color:#1a237e;
+font-size:32px;
+
+}
+
+
+
+
+.subtitle{
+
+font-size:18px;
+color:#555;
+
+}
+
+
+
+
+
+input[type=file]{
+
+padding:15px;
+border:1px solid #ccc;
+border-radius:10px;
+
+}
+
+
+
+
+
+button{
+
+background:#1a237e;
+color:white;
+border:none;
+padding:15px 30px;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+margin:10px;
+
+}
+
+
+
+button:hover{
+
+background:#3949ab;
+
+}
+
+
+
+
+
+.card{
+
+background:#e8eaf6;
+padding:20px;
+margin-top:25px;
+border-radius:10px;
+
+}
+
+
+
+
+
+.cards{
+
+display:flex;
+justify-content:center;
+gap:15px;
+flex-wrap:wrap;
+margin-top:20px;
+
+}
+
+
+
+
+
+.small-card{
+
+background:#e8eaf6;
+padding:20px;
+border-radius:10px;
+width:150px;
+
+}
+
+
+
+.small-card h3{
+
+font-size:30px;
+color:#1a237e;
+
+}
+
+
+
+
+
+.feature{
+
+text-align:left;
+font-size:17px;
+line-height:32px;
+
+}
+
+
+
+
+
+.footer{
+
+margin-top:25px;
+color:#555;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+
+<!-- NAVBAR -->
+
+<nav>
+
+
+<a href="/">
+Home
+</a>
+
+
+<a href="/dashboard">
+Dashboard
+</a>
+
+
+<a href="/about">
+About
+</a>
+
+
+<a href="/architecture">
+Architecture
+</a>
+
+
+<a href="/results">
+Results
+</a>
+
+
+</nav>
+
+
+
+
+
+
+
+<div class="container">
+
+
+
+<h1>
+🔍 Deepfake Investigation System
+</h1>
+
+
+
+<p class="subtitle">
+
+AI Based Image & Video Authenticity Analysis
+
+</p>
+
+
+
+
+
+
+
+<form action="/predict" method="POST" enctype="multipart/form-data">
+
+
+<input
+type="file"
+name="file"
+accept="image/*,video/*"
+required
+>
+
+
+<br><br>
+
+
+<button type="submit">
+
+Analyze Media
+
+</button>
+
+
+</form>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+About System
+</h2>
+
+
+<p>
+
+Deepfake Investigation System is an AI based digital
+forensic application that detects manipulated images
+and videos using EfficientNet Deep Learning.
+
+The system provides prediction, confidence,
+risk assessment, Grad-CAM explanation and PDF reports.
+
+</p>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="cards">
+
+
+
+<div class="small-card">
+
+<h3>
+69.86%
+</h3>
+
+<p>
+Model Accuracy
+</p>
+
+</div>
+
+
+
+
+
+<div class="small-card">
+
+<h3>
+74.49%
+</h3>
+
+<p>
+Fake Detection
+</p>
+
+</div>
+
+
+
+
+
+<div class="small-card">
+
+<h3>
+65.77%
+</h3>
+
+<p>
+Real Detection
+</p>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+Implemented Features
+</h2>
+
+
+
+<div class="feature">
+
+
+✔ EfficientNet Deep Learning Classification
+<br>
+
+✔ Image Deepfake Detection
+<br>
+
+✔ Video Frame Analysis
+<br>
+
+✔ Fake / Real Probability Prediction
+<br>
+
+✔ Confidence Score Calculation
+<br>
+
+✔ Risk Level Assessment
+<br>
+
+✔ Grad-CAM Explainable AI
+<br>
+
+✔ PDF Investigation Report
+<br>
+
+✔ Investigation History Dashboard
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<br>
+
+
+
+<a href="/dashboard">
+
+<button>
+
+📊 View Dashboard
+
+</button>
+
+</a>
+
+
+
+
+
+<a href="/results">
+
+<button>
+
+📈 Model Results
+
+</button>
+
+</a>
+
+
+
+
+
+
+<div class="footer">
+
+<p>
+
+Deepfake Investigation System
+<br>
+AI Based Digital Forensics Project
+
+</p>
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+</body>
+
+</html>

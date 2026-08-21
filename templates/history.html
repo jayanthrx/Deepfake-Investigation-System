@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Investigation History</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f5f5f5;
+    margin:0;
+    padding:40px;
+}
+
+.container{
+    width:90%;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px gray;
+}
+
+h1{
+    text-align:center;
+    color:#007BFF;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th{
+    background:#007BFF;
+    color:white;
+    padding:12px;
+}
+
+td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #ddd;
+}
+
+tr:hover{
+    background:#f1f1f1;
+}
+
+.real{
+    color:green;
+    font-weight:bold;
+}
+
+.fake{
+    color:red;
+    font-weight:bold;
+}
+
+.button{
+    display:inline-block;
+    margin-top:25px;
+    padding:12px 20px;
+    background:#007BFF;
+    color:white;
+    text-decoration:none;
+    border-radius:5px;
+}
+
+.button:hover{
+    background:#0056b3;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Investigation History</h1>
+
+<table>
+
+<tr>
+<th>File Name</th>
+<th>Result</th>
+<th>Confidence</th>
+</tr>
+
+{% for row in data %}
+
+<tr>
+
+<td>{{ row[0] }}</td>
+
+{% if row[1] == "Real" %}
+<td class="real">✅ Real</td>
+{% else %}
+<td class="fake">❌ Fake</td>
+{% endif %}
+
+<td>{{ row[2] }}%</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<center>
+
+<a href="/" class="button">
+🏠 Back to Home
+</a>
+
+</center>
+
+</div>
+
+</body>
+
+</html>

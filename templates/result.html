@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Deepfake Investigation Result</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        nav {
+            background: #111827;
+            padding: 18px 30px;
+            display: flex;
+            gap: 25px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .file-name {
+            font-size: 18px;
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .prediction {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .real {
+            color: #15803d;
+        }
+
+        .fake {
+            color: #dc2626;
+        }
+
+        .uncertain {
+            color: #d97706;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .value {
+            font-weight: bold;
+        }
+
+        .probability-container {
+            margin-top: 20px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .bar {
+            width: 100%;
+            height: 25px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .fake-bar {
+            height: 100%;
+            background: #dc2626;
+        }
+
+        .real-bar {
+            height: 100%;
+            background: #16a34a;
+        }
+
+        .risk {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .risk-low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .risk-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .risk-unknown {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .video-box {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        video {
+            width: 100%;
+            max-height: 500px;
+            border-radius: 12px;
+            background: black;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 13px 22px;
+            margin: 5px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #1d4ed8;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .report-box {
+            text-align: center;
+        }
+
+        .report-success {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .report-failed {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+
+            nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .container {
+                margin: 20px auto;
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .metric {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ====================================================== -->
+<!-- NAVIGATION -->
+<!-- ====================================================== -->
+
+<nav>
+
+    <a href="/">Home</a>
+
+    <a href="/dashboard">Dashboard</a>
+
+    <a href="/about">About</a>
+
+    <a href="/architecture">Architecture</a>
+
+    <a href="/results">Results</a>
+
+</nav>
+
+
+<div class="container">
+
+
+    <!-- ================================================== -->
+    <!-- MAIN RESULT -->
+    <!-- ================================================== -->
+
+    <div class="card">
+
+        <h1>
+            🔍 Deepfake Investigation Result
+        </h1>
+
+
+        <!-- ============================================== -->
+        <!-- FILE -->
+        <!-- ============================================== -->
+
+        <h2>
+            📁 Uploaded File
+        </h2>
+
+        <div class="file-name">
+
+            {{ filename if filename else "Unknown file" }}
+
+        </div>
+
+
+        <div class="metric">
+
+            <span>
+                File Type
+            </span>
+
+            <span class="value">
+
+                {% if file_type %}
+                    {{ file_type|upper }}
+                {% else %}
+                    VIDEO
+                {% endif %}
+
+            </span>
+
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- VIDEO -->
+        <!-- ============================================== -->
+
+        {% if file_type == "video" and video_url %}
+
+        <div class="video-box">
+
+            <video controls>
+
+                <source
+                    src="{{ video_url }}"
+                    type="video/mp4"
+                >
+
+                Your browser does not support video playback.
+
+            </video>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ============================================== -->
+        <!-- PREDICTION -->
+        <!-- ============================================== -->
+
+        <h2 style="margin-top:30px;">
+
+            Final Prediction
+
+        </h2>
+
+
+        {% set prediction_text = prediction|string|upper %}
+
+
+        {% if "FAKE" in prediction_text %}
+
+            <div class="prediction fake">
+
+                🚨 FAKE
+
+            </div>
+
+            <p style="text-align:center;">
+
+                The analysis indicates that suspicious
+                manipulation patterns may be present.
+
+            </p>
+
+
+        {% elif "REAL" in prediction_text %}
+
+            <div class="prediction real">
+
+                ✅ REAL
+
+            </div>
+
+            <p style="text-align:center;">
+
+                The analysis indicates that the media
+                appears consistent with authentic content.
+
+            </p>
+
+
+        {% else %}
+
+            <div class="prediction uncertain">
+
+                ⚠ UNCERTAIN
+
+            </div>
+
+            <p style="text-align:center;">
+
+                The model does not have enough confidence
+                to make a reliable classification.
+
+            </p>
+
+        {% endif %}
+
+
+        <!-- ============================================== -->
+        <!-- CONFIDENCE -->
+        <!-- ============================================== -->
+
+        <h2>
+
+            🎯 Confidence Score
+
+        </h2>
+
+
+        <div class="metric">
+
+            <span>
+                Confidence
+            </span>
+
+            <span class="value">
+
+                {{ "%.2f"|format(confidence|float) }}%
+
+            </span>
+
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- PROBABILITIES -->
+        <!-- ============================================== -->
+
+        <div class="probability-container">
+
+
+            <div class="bar-label">
+
+                <span>
+                    Fake Probability
+                </span>
+
+                <span>
+                    {{ "%.2f"|format(fake_probability|float) }}%
+                </span>
+
+            </div>
+
+
+            <div class="bar">
+
+                <div
+                    class="fake-bar"
+                    style="width: {{ fake_probability|float }}%;"
+                ></div>
+
+            </div>
+
+
+            <div class="bar-label">
+
+                <span>
+                    Real Probability
+                </span>
+
+                <span>
+                    {{ "%.2f"|format(real_probability|float) }}%
+                </span>
+
+            </div>
+
+
+            <div class="bar">
+
+                <div
+                    class="real-bar"
+                    style="width: {{ real_probability|float }}%;"
+                ></div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- ============================================== -->
+        <!-- RISK -->
+        <!-- ============================================== -->
+
+        {% set risk_text = risk|string|upper %}
+
+
+        {% if "HIGH" in risk_text %}
+
+            <div class="risk risk-high">
+
+                🔴 HIGH RISK
+
+            </div>
+
+
+        {% elif "MEDIUM" in risk_text %}
+
+            <div class="risk risk-medium">
+
+                🟡 MEDIUM RISK
+
+            </div>
+
+
+        {% elif "LOW" in risk_text %}
+
+            <div class="risk risk-low">
+
+                🟢 LOW RISK
+
+            </div>
+
+
+        {% else %}
+
+            <div class="risk risk-unknown">
+
+                ⚪ UNKNOWN RISK
+
+            </div>
+
+        {% endif %}
+
+
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- ERROR -->
+    <!-- ================================================== -->
+
+    {% if error %}
+
+    <div class="card">
+
+        <div class="error">
+
+            <strong>
+                Error:
+            </strong>
+
+            {{ error }}
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ================================================== -->
+    <!-- REPORT -->
+    <!-- ================================================== -->
+
+    <div class="card report-box">
+
+        <h2>
+            📄 Investigation Report
+        </h2>
+
+
+        {% if report_filename %}
+
+            <p class="report-success">
+
+                ✅ PDF investigation report generated successfully.
+
+            </p>
+
+
+            <a
+                class="button"
+                href="/reports/{{ report_filename }}"
+                target="_blank"
+            >
+
+                📥 Download PDF Report
+
+            </a>
+
+
+        {% else %}
+
+            <p class="report-failed">
+
+                ⚠ PDF report could not be generated.
+
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- BUTTONS -->
+    <!-- ================================================== -->
+
+    <div class="button-container">
+
+        <a
+            href="/"
+            class="button"
+        >
+
+            🔄 Analyze Another File
+
+        </a>
+
+
+        <a
+            href="/dashboard"
+            class="button"
+        >
+
+            📊 View Dashboard
+
+        </a>
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<title>
+System Architecture
+</title>
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<style>
+
+body{
+
+font-family:Arial;
+background:#f2f5f9;
+text-align:center;
+
+}
+
+
+
+nav{
+
+background:#1a237e;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+
+}
+
+
+
+nav a{
+
+color:white;
+text-decoration:none;
+margin:15px;
+font-size:18px;
+font-weight:bold;
+
+}
+
+
+
+nav a:hover{
+
+color:#ffeb3b;
+
+}
+
+
+
+
+.container{
+
+width:90%;
+max-width:900px;
+margin:40px auto;
+background:white;
+padding:30px;
+border-radius:15px;
+box-shadow:0 0 15px #ccc;
+
+}
+
+
+
+
+h1{
+
+color:#1a237e;
+
+}
+
+
+
+
+.card{
+
+background:#e8eaf6;
+padding:20px;
+margin:20px;
+border-radius:10px;
+
+}
+
+
+
+
+img{
+
+width:90%;
+max-width:750px;
+border-radius:10px;
+margin-top:20px;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+
+<nav>
+
+
+<a href="/">
+Home
+</a>
+
+
+<a href="/dashboard">
+Dashboard
+</a>
+
+
+<a href="/about">
+About
+</a>
+
+
+<a href="/architecture">
+Architecture
+</a>
+
+<a href="/results">
+Results
+</a>
+
+</nav>
+
+
+
+
+
+
+<div class="container">
+
+
+
+<h1>
+🏗 Deepfake Investigation System Architecture
+</h1>
+
+
+
+
+<div class="card">
+
+
+<h2>
+System Workflow
+</h2>
+
+
+<p>
+
+User uploads image/video →
+Media preprocessing →
+EfficientNet Deep Learning Model →
+Prediction →
+Confidence Calculation →
+Risk Assessment →
+Grad-CAM Explanation →
+PDF Report Generation →
+Database Storage
+
+</p>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+Architecture Diagram
+</h2>
+
+
+
+<img src="/static/architecture.png" 
+alt="System Architecture">
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+Major Components
+</h2>
+
+
+<p>
+
+<b>1. User Interface</b><br>
+Flask Web Application for uploading and viewing results.
+
+<br><br>
+
+
+<b>2. Deep Learning Model</b><br>
+EfficientNet model classifies media as Real or Fake.
+
+<br><br>
+
+
+<b>3. Video Detector</b><br>
+Extracts frames and analyzes video content.
+
+<br><br>
+
+
+<b>4. Explainable AI</b><br>
+Grad-CAM generates heatmaps showing suspicious regions.
+
+<br><br>
+
+
+<b>5. Report Generator</b><br>
+Creates PDF investigation reports.
+
+<br><br>
+
+
+<b>6. Database</b><br>
+Stores previous investigation history.
+
+</p>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+</body>
+
+</html>

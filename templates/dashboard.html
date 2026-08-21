@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+<title>
+Investigation Dashboard
+</title>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<style>
+
+body{
+
+    font-family:Arial;
+    background:#f2f5f9;
+    text-align:center;
+
+}
+
+
+
+nav{
+
+    background:#1a237e;
+    padding:15px;
+    border-radius:10px;
+}
+
+
+
+nav a{
+
+    color:white;
+    text-decoration:none;
+    margin:15px;
+    font-weight:bold;
+
+}
+
+
+
+nav a:hover{
+
+    color:#ffeb3b;
+
+}
+
+
+
+.container{
+
+    width:90%;
+    max-width:1000px;
+    margin:40px auto;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 0 15px #ccc;
+
+}
+
+
+
+h1{
+
+    color:#1a237e;
+
+}
+
+
+
+.cards{
+
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+
+}
+
+
+
+.card{
+
+    background:#e8eaf6;
+    padding:20px;
+    border-radius:10px;
+    margin:20px;
+
+}
+
+
+
+.small-card{
+
+    width:160px;
+
+}
+
+
+
+.fake{
+
+    color:red;
+    font-weight:bold;
+
+}
+
+
+
+.real{
+
+    color:green;
+    font-weight:bold;
+
+}
+
+
+
+.uncertain{
+
+    color:orange;
+    font-weight:bold;
+
+}
+
+
+
+.chart-card{
+
+    width:80%;
+    margin:auto;
+
+}
+
+
+
+canvas{
+
+    max-height:350px;
+
+}
+
+
+
+table{
+
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+
+}
+
+
+
+th,td{
+
+    padding:12px;
+    border:1px solid #ccc;
+
+}
+
+
+
+th{
+
+    background:#1a237e;
+    color:white;
+
+}
+
+
+
+button{
+
+    background:#1a237e;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:10px;
+    cursor:pointer;
+
+}
+
+
+
+button:hover{
+
+    background:#303f9f;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+<nav>
+
+
+<a href="/">
+Home
+</a>
+
+
+<a href="/dashboard">
+Dashboard
+</a>
+
+
+<a href="/about">
+About
+</a>
+
+
+<a href="/architecture">
+Architecture
+</a>
+
+
+<a href="/results">
+Results
+</a>
+
+
+</nav>
+
+
+
+
+
+<div class="container">
+
+
+
+<h1>
+📊 Deepfake Investigation Dashboard
+</h1>
+
+
+
+
+<div class="cards">
+
+
+
+<div class="card small-card">
+
+<h3>
+Total Files
+</h3>
+
+<h2>
+{{total}}
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card small-card">
+
+<h3>
+Fake
+</h3>
+
+<h2 class="fake">
+{{fake}}
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card small-card">
+
+<h3>
+Real
+</h3>
+
+<h2 class="real">
+{{real}}
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card small-card">
+
+<h3>
+Uncertain
+</h3>
+
+<h2 class="uncertain">
+{{uncertain}}
+</h2>
+
+</div>
+
+
+
+
+
+<div class="card small-card">
+
+<h3>
+Average Confidence
+</h3>
+
+<h2>
+{{avg_confidence}} %
+</h2>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<!-- PIE CHART -->
+
+
+<div class="card chart-card">
+
+
+<h2>
+📊 Fake vs Real Analysis
+</h2>
+
+
+<canvas id="resultChart"></canvas>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- CONFIDENCE CHART -->
+
+
+<div class="card chart-card">
+
+
+<h2>
+📈 Model Confidence
+</h2>
+
+
+<canvas id="confidenceChart"></canvas>
+
+
+</div>
+
+
+
+
+
+
+
+
+<h2>
+Investigation History
+</h2>
+
+
+
+
+
+<table>
+
+
+<tr>
+
+<th>
+File
+</th>
+
+<th>
+Result
+</th>
+
+<th>
+Confidence
+</th>
+
+<th>
+Risk
+</th>
+
+<th>
+Date
+</th>
+
+
+</tr>
+
+
+
+
+
+{% for record in records %}
+
+
+<tr>
+
+
+<td>
+
+{{record.filename}}
+
+</td>
+
+
+
+
+<td>
+
+
+{% if record.result=="Fake" %}
+
+
+<span class="fake">
+
+{{record.result}}
+
+</span>
+
+
+{% elif record.result=="Real" %}
+
+
+<span class="real">
+
+{{record.result}}
+
+</span>
+
+
+{% else %}
+
+
+<span class="uncertain">
+
+{{record.result}}
+
+</span>
+
+
+{% endif %}
+
+
+</td>
+
+
+
+
+
+<td>
+
+{{record.confidence}} %
+
+</td>
+
+
+
+
+
+<td>
+
+{{record.risk}}
+
+</td>
+
+
+
+
+
+<td>
+
+{{record.date}}
+
+</td>
+
+
+</tr>
+
+
+{% endfor %}
+
+
+
+</table>
+
+
+
+
+
+
+
+<br>
+
+
+<a href="/">
+
+<button>
+
+Analyze New File
+
+</button>
+
+</a>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+const fakeCount = Number("{{ fake }}");
+const realCount = Number("{{ real }}");
+const uncertainCount = Number("{{ uncertain }}");
+const avgConfidence = Number("{{ avg_confidence }}");
+
+
+// Detection Pie Chart
+
+new Chart(
+    document.getElementById("resultChart"),
+    {
+
+        type: "pie",
+
+        data: {
+
+            labels: [
+                "Fake",
+                "Real",
+                "Uncertain"
+            ],
+
+            datasets: [
+                {
+
+                    data: [
+                        fakeCount,
+                        realCount,
+                        uncertainCount
+                    ]
+
+                }
+            ]
+
+        }
+
+    }
+);
+
+
+
+// Confidence Chart
+
+new Chart(
+    document.getElementById("confidenceChart"),
+    {
+
+        type: "bar",
+
+        data: {
+
+            labels: [
+                "Average Confidence"
+            ],
+
+            datasets: [
+
+                {
+
+                    label:"Confidence %",
+
+                    data:[
+                        avgConfidence
+                    ]
+
+                }
+
+            ]
+
+        }
+
+    }
+);
+
+
+</script>
+
+
+
+
+
+
+</body>
+
+
+</html>
