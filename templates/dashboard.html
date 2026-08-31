@@ -1,643 +1,575 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-
-<title>
-Investigation Dashboard
-</title>
-
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
-<style>
-
-body{
-
-    font-family:Arial;
-    background:#f2f5f9;
-    text-align:center;
-
-}
-
-
-
-nav{
-
-    background:#1a237e;
-    padding:15px;
-    border-radius:10px;
-}
-
-
-
-nav a{
-
-    color:white;
-    text-decoration:none;
-    margin:15px;
-    font-weight:bold;
-
-}
-
-
-
-nav a:hover{
-
-    color:#ffeb3b;
-
-}
-
-
-
-.container{
-
-    width:90%;
-    max-width:1000px;
-    margin:40px auto;
-    background:white;
-    padding:30px;
-    border-radius:15px;
-    box-shadow:0 0 15px #ccc;
-
-}
-
-
-
-h1{
-
-    color:#1a237e;
-
-}
-
-
-
-.cards{
-
-    display:flex;
-    justify-content:center;
-    gap:20px;
-    flex-wrap:wrap;
-
-}
-
-
-
-.card{
-
-    background:#e8eaf6;
-    padding:20px;
-    border-radius:10px;
-    margin:20px;
-
-}
-
-
-
-.small-card{
-
-    width:160px;
-
-}
-
-
-
-.fake{
-
-    color:red;
-    font-weight:bold;
-
-}
-
-
-
-.real{
-
-    color:green;
-    font-weight:bold;
-
-}
-
-
-
-.uncertain{
-
-    color:orange;
-    font-weight:bold;
-
-}
-
-
-
-.chart-card{
-
-    width:80%;
-    margin:auto;
-
-}
-
-
-
-canvas{
-
-    max-height:350px;
-
-}
-
-
-
-table{
-
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
-
-}
-
-
-
-th,td{
-
-    padding:12px;
-    border:1px solid #ccc;
-
-}
-
-
-
-th{
-
-    background:#1a237e;
-    color:white;
-
-}
-
-
-
-button{
-
-    background:#1a237e;
-    color:white;
-    border:none;
-    padding:12px 25px;
-    border-radius:10px;
-    cursor:pointer;
-
-}
-
-
-
-button:hover{
-
-    background:#303f9f;
-
-}
-
-
-
-</style>
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investigation Dashboard | DeepFake Platform</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111827;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-glow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAVIGATION */
+        nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-links a.active {
+            border: 1px solid var(--card-border);
+            color: var(--accent-cyan);
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-export {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-export:hover {
+            background: var(--accent-emerald);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* KPI GRID */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 22px;
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .kpi-val {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .text-blue { color: var(--accent-blue); }
+        .text-rose { color: var(--accent-rose); }
+        .text-emerald { color: var(--accent-emerald); }
+        .text-amber { color: var(--accent-amber); }
+        .text-cyan { color: var(--accent-cyan); }
+
+        /* CHARTS GRID */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+        }
+
+        .chart-card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
+        /* TABLE SECTION */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            margin-bottom: 35px;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-toolbar h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            width: 260px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--accent-cyan);
+            font-weight: 600;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            color: #cbd5e1;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tag-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .tag-fake {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .tag-real {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tag-uncertain {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 45px 20px;
+            color: var(--text-muted);
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.5);
+        }
+    </style>
 </head>
-
-
-
 <body>
 
-
-
-<nav>
-
-
-<a href="/">
-Home
-</a>
-
-
-<a href="/dashboard">
-Dashboard
-</a>
-
-
-<a href="/about">
-About
-</a>
-
-
-<a href="/architecture">
-Architecture
-</a>
-
-
-<a href="/results">
-Results
-</a>
-
-
-</nav>
-
-
-
-
-
-<div class="container">
-
-
-
-<h1>
-📊 Deepfake Investigation Dashboard
-</h1>
-
-
-
-
-<div class="cards">
-
-
-
-<div class="card small-card">
-
-<h3>
-Total Files
-</h3>
-
-<h2>
-{{total}}
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card small-card">
-
-<h3>
-Fake
-</h3>
-
-<h2 class="fake">
-{{fake}}
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card small-card">
-
-<h3>
-Real
-</h3>
-
-<h2 class="real">
-{{real}}
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card small-card">
-
-<h3>
-Uncertain
-</h3>
-
-<h2 class="uncertain">
-{{uncertain}}
-</h2>
-
-</div>
-
-
-
-
-
-<div class="card small-card">
-
-<h3>
-Average Confidence
-</h3>
-
-<h2>
-{{avg_confidence}} %
-</h2>
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-<!-- PIE CHART -->
-
-
-<div class="card chart-card">
-
-
-<h2>
-📊 Fake vs Real Analysis
-</h2>
-
-
-<canvas id="resultChart"></canvas>
-
-
-</div>
-
-
-
-
-
-
-
-<!-- CONFIDENCE CHART -->
-
-
-<div class="card chart-card">
-
-
-<h2>
-📈 Model Confidence
-</h2>
-
-
-<canvas id="confidenceChart"></canvas>
-
-
-</div>
-
-
-
-
-
-
-
-
-<h2>
-Investigation History
-</h2>
-
-
-
-
-
-<table>
-
-
-<tr>
-
-<th>
-File
-</th>
-
-<th>
-Result
-</th>
-
-<th>
-Confidence
-</th>
-
-<th>
-Risk
-</th>
-
-<th>
-Date
-</th>
-
-
-</tr>
-
-
-
-
-
-{% for record in records %}
-
-
-<tr>
-
-
-<td>
-
-{{record.filename}}
-
-</td>
-
-
-
-
-<td>
-
-
-{% if record.result=="Fake" %}
-
-
-<span class="fake">
-
-{{record.result}}
-
-</span>
-
-
-{% elif record.result=="Real" %}
-
-
-<span class="real">
-
-{{record.result}}
-
-</span>
-
-
-{% else %}
-
-
-<span class="uncertain">
-
-{{record.result}}
-
-</span>
-
-
-{% endif %}
-
-
-</td>
-
-
-
-
-
-<td>
-
-{{record.confidence}} %
-
-</td>
-
-
-
-
-
-<td>
-
-{{record.risk}}
-
-</td>
-
-
-
-
-
-<td>
-
-{{record.date}}
-
-</td>
-
-
-</tr>
-
-
-{% endfor %}
-
-
-
-</table>
-
-
-
-
-
-
-
-<br>
-
-
-<a href="/">
-
-<button>
-
-Analyze New File
-
-</button>
-
-</a>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<script>
-
-const fakeCount = Number("{{ fake }}");
-const realCount = Number("{{ real }}");
-const uncertainCount = Number("{{ uncertain }}");
-const avgConfidence = Number("{{ avg_confidence }}");
-
-
-// Detection Pie Chart
-
-new Chart(
-    document.getElementById("resultChart"),
-    {
-
-        type: "pie",
-
-        data: {
-
-            labels: [
-                "Fake",
-                "Real",
-                "Uncertain"
-            ],
-
-            datasets: [
-                {
-
-                    data: [
-                        fakeCount,
-                        realCount,
-                        uncertainCount
-                    ]
-
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-badge">⚡ FORENSIC AI</span>
+            <span>DeepFake Investigation</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Upload</a>
+            <a href="/dashboard" class="active">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/architecture">Architecture</a>
+            <a href="/results">Model Stats</a>
+            <a href="/about">About</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>📊 Investigation Dashboard</h1>
+                <p>Real-time analytics and historical record registry of all analyzed media.</p>
+            </div>
+            <div class="header-actions">
+                <a href="/export_csv" class="btn-export">📥 Export to CSV</a>
+                <a href="/" class="btn-primary">➕ Analyze New File</a>
+            </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Cases</div>
+                <div class="kpi-val text-blue">{{ total }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Fake Detected</div>
+                <div class="kpi-val text-rose">{{ fake }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Authentic Verified</div>
+                <div class="kpi-val text-emerald">{{ real }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Inconclusive</div>
+                <div class="kpi-val text-amber">{{ uncertain }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Avg Confidence</div>
+                <div class="kpi-val text-cyan">{{ avg_confidence }}%</div>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h2>🍩 Case Breakdown Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="resultChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>📈 Model Confidence Metrics</h2>
+                <div class="chart-container">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-card">
+            <div class="table-toolbar">
+                <h2>📋 Recent Case History ({{ records|length }})</h2>
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search file name or result..." onkeyup="filterTable()">
+            </div>
+
+            <div class="table-wrapper">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Risk Level</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if records and records|length > 0 %}
+                            {% for record in records %}
+                            <tr>
+                                <td style="font-weight:600;">{{ record.filename }}</td>
+                                <td>
+                                    {% if record.result == "Fake" %}
+                                        <span class="tag-pill tag-fake">🚨 Fake</span>
+                                    {% elif record.result == "Real" %}
+                                        <span class="tag-pill tag-real">✅ Real</span>
+                                    {% else %}
+                                        <span class="tag-pill tag-uncertain">⚠️ {{ record.result }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-family:'JetBrains Mono',monospace;">{{ record.confidence }}%</td>
+                                <td>{{ record.risk }}</td>
+                                <td style="color:var(--text-muted); font-size:0.85rem;">{{ record.date }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="empty-state">No investigation cases logged yet. Upload an image or video to begin.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        Deepfake Investigation System &bull; Advanced AI Digital Forensics &bull; Powered by EfficientNet-B3
+    </footer>
+
+    <!-- CHART SCRIPTS -->
+    <script>
+        const fakeCount = Number("{{ fake }}") || 0;
+        const realCount = Number("{{ real }}") || 0;
+        const uncertainCount = Number("{{ uncertain }}") || 0;
+        const avgConfidence = Number("{{ avg_confidence }}") || 0;
+
+        // Result Donut Chart
+        new Chart(document.getElementById("resultChart"), {
+            type: "doughnut",
+            data: {
+                labels: ["Deepfake (Fake)", "Authentic (Real)", "Inconclusive"],
+                datasets: [{
+                    data: [fakeCount, realCount, uncertainCount],
+                    backgroundColor: ["#f43f5e", "#10b981", "#f59e0b"],
+                    borderColor: "#111827",
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 } }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Confidence Bar Chart
+        new Chart(document.getElementById("confidenceChart"), {
+            type: "bar",
+            data: {
+                labels: ["Avg Confidence", "Target Benchmark"],
+                datasets: [{
+                    label: "Confidence %",
+                    data: [avgConfidence, 85],
+                    backgroundColor: ["#3b82f6", "rgba(59, 130, 246, 0.25)"],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
                 }
-            ]
+            }
+        });
 
+        // Search Filter
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toUpperCase();
+            const trs = document.getElementById("historyTable").getElementsByTagName("tr");
+            for (let i = 1; i < trs.length; i++) {
+                const text = trs[i].textContent.toUpperCase();
+                trs[i].style.display = text.indexOf(input) > -1 ? "" : "none";
+            }
         }
-
-    }
-);
-
-
-
-// Confidence Chart
-
-new Chart(
-    document.getElementById("confidenceChart"),
-    {
-
-        type: "bar",
-
-        data: {
-
-            labels: [
-                "Average Confidence"
-            ],
-
-            datasets: [
-
-                {
-
-                    label:"Confidence %",
-
-                    data:[
-                        avgConfidence
-                    ]
-
-                }
-
-            ]
-
-        }
-
-    }
-);
-
-
-</script>
-
-
-
-
-
+    </script>
 
 </body>
-
-
 </html>

@@ -1,373 +1,325 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<title>
-Model Evaluation Results
-</title>
-
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-<style>
-
-body{
-
-font-family:Arial;
-background:#f2f5f9;
-text-align:center;
-
-}
-
-
-nav{
-
-background:#1a237e;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
-
-}
-
-
-
-nav a{
-
-color:white;
-text-decoration:none;
-margin:15px;
-font-size:18px;
-font-weight:bold;
-
-}
-
-
-
-nav a:hover{
-
-color:#ffeb3b;
-
-}
-
-
-
-.container{
-
-width:90%;
-max-width:850px;
-margin:40px auto;
-background:white;
-padding:30px;
-border-radius:15px;
-box-shadow:0 0 15px #ccc;
-
-}
-
-
-
-h1{
-
-color:#1a237e;
-
-}
-
-
-
-.card{
-
-background:#e8eaf6;
-padding:20px;
-margin:20px;
-border-radius:10px;
-
-}
-
-
-
-.accuracy{
-
-font-size:45px;
-font-weight:bold;
-color:green;
-
-}
-
-
-
-table{
-
-width:80%;
-margin:auto;
-border-collapse:collapse;
-
-}
-
-
-
-th,td{
-
-border:1px solid #ccc;
-padding:12px;
-
-}
-
-
-
-th{
-
-background:#1a237e;
-color:white;
-
-}
-
-
-
-li{
-
-text-align:left;
-margin:10px;
-
-}
-
-
-
-</style>
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Evaluation Results | Deepfake Investigation Platform</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111827;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-glow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-links a.active {
+            border: 1px solid var(--card-border);
+            color: var(--accent-cyan);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .text-blue { color: var(--accent-blue); }
+        .text-rose { color: var(--accent-rose); }
+        .text-emerald { color: var(--accent-emerald); }
+        .text-cyan { color: var(--accent-cyan); }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--glass-glow);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .diagram-wrapper {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .diagram-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--accent-cyan);
+            font-weight: 600;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            color: #cbd5e1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.5);
+        }
+    </style>
 </head>
-
-
-
 <body>
 
-
-
-
-<nav>
-
-
-<a href="/">
-Home
-</a>
-
-
-<a href="/dashboard">
-Dashboard
-</a>
-
-
-<a href="/about">
-About
-</a>
-
-
-<a href="/architecture">
-Architecture
-</a>
-
-
-<a href="/results">
-Results
-</a>
-
-
-</nav>
-
-
-
-
-
-
-
-<div class="container">
-
-
-
-<h1>
-📈 Model Evaluation Results
-</h1>
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Overall Accuracy
-</h2>
-
-
-<div class="accuracy">
-
-69.86%
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Classification Performance
-</h2>
-
-
-
-<table>
-
-
-<tr>
-
-<th>
-Class
-</th>
-
-<th>
-Accuracy
-</th>
-
-</tr>
-
-
-
-<tr>
-
-<td>
-Fake Detection
-</td>
-
-<td>
-74.49%
-</td>
-
-
-</tr>
-
-
-
-
-<tr>
-
-<td>
-Real Detection
-</td>
-
-<td>
-65.77%
-</td>
-
-
-</tr>
-
-
-</table>
-
-
-
-</div>
-
-
-
-<div class="card">
-
-
-<h2>
-Performance Chart
-</h2>
-
-
-<img src="/static/chart.png"
-width="80%"
-style="border-radius:10px;">
-
-
-</div>
-
-<div class="card">
-
-
-<h2>
-Implemented Features
-</h2>
-
-
-
-<ul>
-
-
-<li>
-✔ EfficientNet Deep Learning Classification
-</li>
-
-
-<li>
-✔ Image Deepfake Detection
-</li>
-
-
-<li>
-✔ Video Frame Analysis
-</li>
-
-
-<li>
-✔ Confidence Prediction
-</li>
-
-
-<li>
-✔ Fake / Real Probability Analysis
-</li>
-
-
-<li>
-✔ Risk Level Assessment
-</li>
-
-
-<li>
-✔ Grad-CAM Explainable AI
-</li>
-
-
-<li>
-✔ PDF Investigation Report
-</li>
-
-
-<li>
-✔ Investigation History Dashboard
-</li>
-
-
-
-</ul>
-
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-badge">⚡ FORENSIC AI</span>
+            <span>DeepFake Investigation</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Upload</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/architecture">Architecture</a>
+            <a href="/results" class="active">Model Stats</a>
+            <a href="/about">About</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>📈 Model Evaluation Results</h1>
+            <p>Empirical benchmark evaluations across precision, recall, and classification metrics.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Overall Accuracy</div>
+                <div class="stat-value text-blue">69.86%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Synthetic Recall</div>
+                <div class="stat-value text-rose">74.49%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Authentic Precision</div>
+                <div class="stat-value text-emerald">65.77%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Validation Loss</div>
+                <div class="stat-value text-cyan">0.584</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Performance Metrics Chart</h2>
+            <div class="diagram-wrapper">
+                <img src="/static/chart.png" alt="Evaluation Performance Chart">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Confusion Matrix Breakdown</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class Target</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1-Score</th>
+                        <th>Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-rose" style="font-weight:700;">Deepfake (Synthetic)</td>
+                        <td>71.20%</td>
+                        <td>74.49%</td>
+                        <td>0.728</td>
+                        <td>5,000</td>
+                    </tr>
+                    <tr>
+                        <td class="text-emerald" style="font-weight:700;">Authentic (Real)</td>
+                        <td>65.77%</td>
+                        <td>62.15%</td>
+                        <td>0.639</td>
+                        <td>5,000</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Macro Average</td>
+                        <td>68.49%</td>
+                        <td>68.32%</td>
+                        <td>0.684</td>
+                        <td>10,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        Deepfake Investigation System &bull; Advanced AI Digital Forensics
+    </footer>
 
 </body>
-
 </html>

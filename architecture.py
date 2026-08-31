@@ -76,9 +76,12 @@ for i in range(len(boxes)-1):
 
 
 
-img.save(
-    "architecture.png"
-)
+import os
 
+static_dir = "static"
+os.makedirs(static_dir, exist_ok=True)
 
-print("Architecture image created successfully")
+img.save(os.path.join(static_dir, "architecture.png"))
+img.save("architecture.png")
+
+print("Architecture image created successfully in static/architecture.png and architecture.png")

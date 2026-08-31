@@ -1,632 +1,624 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Deepfake Investigation Result</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investigation Result | DeepFake Detection</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111827;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-glow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
 
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f8;
-            color: #222;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(244, 63, 94, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 60%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* NAVIGATION */
         nav {
-            background: #111827;
-            padding: 18px 30px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
             display: flex;
-            gap: 25px;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        nav a {
-            color: white;
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
-            font-weight: bold;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
         }
 
-        nav a:hover {
-            text-decoration: underline;
+        .brand-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
         }
 
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* CONTAINER */
         .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-
-        h1 {
-            margin-top: 0;
-            text-align: center;
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
-        .file-name {
-            font-size: 18px;
-            font-weight: bold;
-            word-break: break-word;
-        }
-
-        .prediction {
-            text-align: center;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-
-        .real {
-            color: #15803d;
-        }
-
-        .fake {
-            color: #dc2626;
-        }
-
-        .uncertain {
-            color: #d97706;
-        }
-
-        .metric {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 18px;
-        }
-
-        .metric:last-child {
-            border-bottom: none;
-        }
-
-        .value {
-            font-weight: bold;
-        }
-
-        .probability-container {
-            margin-top: 20px;
-        }
-
-        .bar-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        .bar {
+            max-width: 1050px;
+            margin: 35px auto;
+            padding: 0 20px;
             width: 100%;
-            height: 25px;
-            background: #e5e7eb;
-            border-radius: 20px;
+            flex: 1;
+        }
+
+        /* VERDICT HEADER CARD */
+        .verdict-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(20px);
+            padding: 36px;
+            margin-bottom: 24px;
+            box-shadow: var(--glass-glow);
+            text-align: center;
+            position: relative;
             overflow: hidden;
+        }
+
+        .verdict-card.fake-border {
+            border-color: rgba(244, 63, 94, 0.4);
+            box-shadow: 0 0 40px rgba(244, 63, 94, 0.15);
+        }
+        .verdict-card.real-border {
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+        .verdict-card.uncertain-border {
+            border-color: rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.15);
+        }
+
+        .verdict-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
             margin-bottom: 18px;
         }
 
-        .fake-bar {
+        .badge-fake {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.3);
+        }
+
+        .badge-real {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-uncertain {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .file-meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .file-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* METRIC CARDS ROW */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-tile {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 22px;
+            backdrop-filter: blur(14px);
+        }
+
+        .metric-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .metric-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .text-rose { color: var(--accent-rose); }
+        .text-emerald { color: var(--accent-emerald); }
+        .text-amber { color: var(--accent-amber); }
+        .text-blue { color: var(--accent-blue); }
+
+        /* PROBABILITY BAR CARD */
+        .prob-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(16px);
+        }
+
+        .prob-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-group {
+            margin-bottom: 18px;
+        }
+
+        .bar-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .bar-track {
+            background: rgba(255, 255, 255, 0.06);
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .bar-fill {
             height: 100%;
-            background: #dc2626;
+            border-radius: 999px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .real-bar {
-            height: 100%;
-            background: #16a34a;
+        .bar-fake {
+            background: linear-gradient(90deg, #f43f5e, #fb7185);
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
         }
 
-        .risk {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 22px;
-            font-weight: bold;
-            margin-top: 20px;
+        .bar-real {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
         }
 
-        .risk-low {
-            background: #dcfce7;
-            color: #166534;
+        /* MEDIA SECTION */
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
-        .risk-medium {
-            background: #fef3c7;
-            color: #92400e;
+        .media-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
         }
 
-        .risk-high {
-            background: #fee2e2;
-            color: #991b1b;
+        .media-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .risk-unknown {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .video-box {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        video {
-            width: 100%;
-            max-height: 500px;
+        .media-view {
+            background: #000;
             border-radius: 12px;
-            background: black;
-        }
-
-        .button-container {
+            overflow: hidden;
             text-align: center;
-            margin-top: 25px;
+            border: 1px solid var(--card-border);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
         }
 
-        .button {
-            display: inline-block;
-            padding: 13px 22px;
-            margin: 5px;
-            background: #2563eb;
+        .media-view img, .media-view video {
+            max-width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .media-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* VIDEO FRAME TABLE */
+        .video-table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(16px);
+        }
+
+        .video-table-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--accent-cyan);
+            font-weight: 600;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            color: #cbd5e1;
+        }
+
+        /* ACTIONS */
+        .actions-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--accent-emerald), #059669);
             color: white;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+            transition: all 0.2s ease;
         }
 
-        .button:hover {
-            background: #1d4ed8;
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.5);
         }
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
+        .btn-action-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
         }
 
-        .report-box {
+        .btn-action-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* FOOTER */
+        footer {
             text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.5);
         }
-
-        .report-success {
-            color: #15803d;
-            font-weight: bold;
-        }
-
-        .report-failed {
-            color: #dc2626;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-
-            nav {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .container {
-                margin: 20px auto;
-                padding: 10px;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .metric {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-        }
-
     </style>
-
 </head>
-
-
 <body>
 
-
-<!-- ====================================================== -->
-<!-- NAVIGATION -->
-<!-- ====================================================== -->
-
-<nav>
-
-    <a href="/">Home</a>
-
-    <a href="/dashboard">Dashboard</a>
-
-    <a href="/about">About</a>
-
-    <a href="/architecture">Architecture</a>
-
-    <a href="/results">Results</a>
-
-</nav>
-
-
-<div class="container">
-
-
-    <!-- ================================================== -->
-    <!-- MAIN RESULT -->
-    <!-- ================================================== -->
-
-    <div class="card">
-
-        <h1>
-            🔍 Deepfake Investigation Result
-        </h1>
-
-
-        <!-- ============================================== -->
-        <!-- FILE -->
-        <!-- ============================================== -->
-
-        <h2>
-            📁 Uploaded File
-        </h2>
-
-        <div class="file-name">
-
-            {{ filename if filename else "Unknown file" }}
-
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-badge">⚡ FORENSIC AI</span>
+            <span>DeepFake Investigation</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Upload</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/architecture">Architecture</a>
+            <a href="/results">Model Stats</a>
+            <a href="/about">About</a>
         </div>
+    </nav>
 
+    <div class="container">
 
-        <div class="metric">
+        <!-- VERDICT CARD -->
+        {% set pred_upper = prediction|string|upper %}
+        {% set is_fake = "FAKE" in pred_upper %}
+        {% set is_real = "REAL" in pred_upper %}
+        {% set is_uncertain = not is_fake and not is_real %}
 
-            <span>
-                File Type
-            </span>
-
-            <span class="value">
-
-                {% if file_type %}
-                    {{ file_type|upper }}
+        <div class="verdict-card {% if is_fake %}fake-border{% elif is_real %}real-border{% else %}uncertain-border{% endif %}">
+            <div>
+                {% if is_fake %}
+                    <span class="verdict-pill badge-fake">🚨 SYNTHETIC DEEPFAKE DETECTED</span>
+                {% elif is_real %}
+                    <span class="verdict-pill badge-real">✅ AUTHENTIC MEDIA VERIFIED</span>
                 {% else %}
-                    VIDEO
+                    <span class="verdict-pill badge-uncertain">⚠️ UNCERTAIN / INCONCLUSIVE</span>
                 {% endif %}
+            </div>
 
-            </span>
-
+            <div class="file-meta-bar">
+                <div class="file-meta-item">📁 {{ filename if filename else "Unknown File" }}</div>
+                <div class="file-meta-item">🎯 {{ file_type }}</div>
+                <div class="file-meta-item">⏱️ {{ date if date else "Just now" }}</div>
+            </div>
         </div>
 
-
-        <!-- ============================================== -->
-        <!-- VIDEO -->
-        <!-- ============================================== -->
-
-        {% if file_type == "video" and video_url %}
-
-        <div class="video-box">
-
-            <video controls>
-
-                <source
-                    src="{{ video_url }}"
-                    type="video/mp4"
-                >
-
-                Your browser does not support video playback.
-
-            </video>
-
+        <!-- METRIC TILES -->
+        <div class="metrics-grid">
+            <div class="metric-tile">
+                <div class="metric-title">Model Confidence</div>
+                <div class="metric-val text-blue">{{ "%.2f"|format(confidence|float) }}%</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-title">Risk Assessment</div>
+                <div class="metric-val {% if risk=='Very High' or risk=='High' %}text-rose{% elif risk=='Low' %}text-emerald{% else %}text-amber{% endif %}">{{ risk }}</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-title">Deepfake Probability</div>
+                <div class="metric-val text-rose">{{ "%.2f"|format(fake_probability|float) }}%</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-title">Authentic Probability</div>
+                <div class="metric-val text-emerald">{{ "%.2f"|format(real_probability|float) }}%</div>
+            </div>
         </div>
 
+        <!-- PROBABILITY BREAKDOWN BARS -->
+        <div class="prob-card">
+            <h2>📊 Authenticity Probability Distribution</h2>
+
+            <div class="bar-group">
+                <div class="bar-label-row">
+                    <span class="text-rose">Synthetic Manipulation (Fake)</span>
+                    <span class="text-rose">{{ "%.2f"|format(fake_probability|float) }}%</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill bar-fake" style="width: {{ fake_probability|float }}%;"></div>
+                </div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar-label-row">
+                    <span class="text-emerald">Pristine Media (Real)</span>
+                    <span class="text-emerald">{{ "%.2f"|format(real_probability|float) }}%</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill bar-real" style="width: {{ real_probability|float }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEDIA VISUALIZATION -->
+        {% set m_type = file_type|string|upper %}
+        <div class="media-grid">
+            {% if m_type == "IMAGE" and uploaded_file %}
+            <div class="media-card">
+                <h3>🖼️ Uploaded Photo</h3>
+                <div class="media-view">
+                    <img src="{{ uploaded_file }}" alt="Original Image">
+                </div>
+                <div class="media-desc">Target image analyzed through facial landmark cropping and EfficientNet-B3 inference.</div>
+            </div>
+            {% endif %}
+
+            {% if m_type == "IMAGE" and heatmap_url %}
+            <div class="media-card">
+                <h3>🔥 Grad-CAM Attention Heatmap</h3>
+                <div class="media-view">
+                    <img src="{{ heatmap_url }}" alt="Grad-CAM Heatmap">
+                </div>
+                <div class="media-desc">Explainable AI feature attribution: Warm colored areas denote highest neural activation contributing to the verdict.</div>
+            </div>
+            {% endif %}
+
+            {% if m_type == "VIDEO" and video_url %}
+            <div class="media-card" style="grid-column: 1 / -1;">
+                <h3>🎬 Video Playback Analysis</h3>
+                <div class="media-view">
+                    <video controls src="{{ video_url }}"></video>
+                </div>
+                <div class="media-desc">Video analyzed frame-by-frame across sampled sequences.</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- VIDEO FRAME METRICS -->
+        {% if m_type == "VIDEO" %}
+        <div class="video-table-card">
+            <h2>🎞️ Frame Sampling Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Frame Count</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Sampled Frames</td>
+                        <td>{{ (fake_frames|int) + (real_frames|int) + (uncertain_frames|int) }}</td>
+                        <td>100.00%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-rose">Manipulated Frames</td>
+                        <td class="text-rose">{{ fake_frames|int }}</td>
+                        <td class="text-rose">{{ "%.2f"|format(fake_percentage|float) }}%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-emerald">Authentic Frames</td>
+                        <td class="text-emerald">{{ real_frames|int }}</td>
+                        <td class="text-emerald">{{ "%.2f"|format(real_percentage|float) }}%</td>
+                    </tr>
+                    <tr>
+                        <td class="text-amber">Inconclusive Frames</td>
+                        <td class="text-amber">{{ uncertain_frames|int }}</td>
+                        <td class="text-amber">{{ "%.2f"|format(uncertain_percentage|float) }}%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         {% endif %}
 
-
-        <!-- ============================================== -->
-        <!-- PREDICTION -->
-        <!-- ============================================== -->
-
-        <h2 style="margin-top:30px;">
-
-            Final Prediction
-
-        </h2>
-
-
-        {% set prediction_text = prediction|string|upper %}
-
-
-        {% if "FAKE" in prediction_text %}
-
-            <div class="prediction fake">
-
-                🚨 FAKE
-
+        <!-- ACTIONS ROW -->
+        <div class="actions-card">
+            <div>
+                {% if report_filename %}
+                <a href="{{ url_for('download_report', filename=report_filename) }}" class="btn-download" target="_blank">
+                    <span>📥 Download Forensic PDF Report</span>
+                </a>
+                {% endif %}
             </div>
 
-            <p style="text-align:center;">
-
-                The analysis indicates that suspicious
-                manipulation patterns may be present.
-
-            </p>
-
-
-        {% elif "REAL" in prediction_text %}
-
-            <div class="prediction real">
-
-                ✅ REAL
-
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="/" class="btn-action-secondary">🔄 Analyze Another File</a>
+                <a href="/dashboard" class="btn-action-secondary">📊 View Dashboard</a>
+                <a href="/history" class="btn-action-secondary">📜 Case History</a>
             </div>
-
-            <p style="text-align:center;">
-
-                The analysis indicates that the media
-                appears consistent with authentic content.
-
-            </p>
-
-
-        {% else %}
-
-            <div class="prediction uncertain">
-
-                ⚠ UNCERTAIN
-
-            </div>
-
-            <p style="text-align:center;">
-
-                The model does not have enough confidence
-                to make a reliable classification.
-
-            </p>
-
-        {% endif %}
-
-
-        <!-- ============================================== -->
-        <!-- CONFIDENCE -->
-        <!-- ============================================== -->
-
-        <h2>
-
-            🎯 Confidence Score
-
-        </h2>
-
-
-        <div class="metric">
-
-            <span>
-                Confidence
-            </span>
-
-            <span class="value">
-
-                {{ "%.2f"|format(confidence|float) }}%
-
-            </span>
-
-        </div>
-
-
-        <!-- ============================================== -->
-        <!-- PROBABILITIES -->
-        <!-- ============================================== -->
-
-        <div class="probability-container">
-
-
-            <div class="bar-label">
-
-                <span>
-                    Fake Probability
-                </span>
-
-                <span>
-                    {{ "%.2f"|format(fake_probability|float) }}%
-                </span>
-
-            </div>
-
-
-            <div class="bar">
-
-                <div
-                    class="fake-bar"
-                    style="width: {{ fake_probability|float }}%;"
-                ></div>
-
-            </div>
-
-
-            <div class="bar-label">
-
-                <span>
-                    Real Probability
-                </span>
-
-                <span>
-                    {{ "%.2f"|format(real_probability|float) }}%
-                </span>
-
-            </div>
-
-
-            <div class="bar">
-
-                <div
-                    class="real-bar"
-                    style="width: {{ real_probability|float }}%;"
-                ></div>
-
-            </div>
-
-
-        </div>
-
-
-        <!-- ============================================== -->
-        <!-- RISK -->
-        <!-- ============================================== -->
-
-        {% set risk_text = risk|string|upper %}
-
-
-        {% if "HIGH" in risk_text %}
-
-            <div class="risk risk-high">
-
-                🔴 HIGH RISK
-
-            </div>
-
-
-        {% elif "MEDIUM" in risk_text %}
-
-            <div class="risk risk-medium">
-
-                🟡 MEDIUM RISK
-
-            </div>
-
-
-        {% elif "LOW" in risk_text %}
-
-            <div class="risk risk-low">
-
-                🟢 LOW RISK
-
-            </div>
-
-
-        {% else %}
-
-            <div class="risk risk-unknown">
-
-                ⚪ UNKNOWN RISK
-
-            </div>
-
-        {% endif %}
-
-
-    </div>
-
-
-    <!-- ================================================== -->
-    <!-- ERROR -->
-    <!-- ================================================== -->
-
-    {% if error %}
-
-    <div class="card">
-
-        <div class="error">
-
-            <strong>
-                Error:
-            </strong>
-
-            {{ error }}
-
         </div>
 
     </div>
 
-    {% endif %}
-
-
-    <!-- ================================================== -->
-    <!-- REPORT -->
-    <!-- ================================================== -->
-
-    <div class="card report-box">
-
-        <h2>
-            📄 Investigation Report
-        </h2>
-
-
-        {% if report_filename %}
-
-            <p class="report-success">
-
-                ✅ PDF investigation report generated successfully.
-
-            </p>
-
-
-            <a
-                class="button"
-                href="/reports/{{ report_filename }}"
-                target="_blank"
-            >
-
-                📥 Download PDF Report
-
-            </a>
-
-
-        {% else %}
-
-            <p class="report-failed">
-
-                ⚠ PDF report could not be generated.
-
-            </p>
-
-        {% endif %}
-
-    </div>
-
-
-    <!-- ================================================== -->
-    <!-- BUTTONS -->
-    <!-- ================================================== -->
-
-    <div class="button-container">
-
-        <a
-            href="/"
-            class="button"
-        >
-
-            🔄 Analyze Another File
-
-        </a>
-
-
-        <a
-            href="/dashboard"
-            class="button"
-        >
-
-            📊 View Dashboard
-
-        </a>
-
-    </div>
-
-
-</div>
-
+    <!-- FOOTER -->
+    <footer>
+        Deepfake Investigation System &bull; Advanced AI Digital Forensics &bull; Powered by EfficientNet-B3 & Grad-CAM
+    </footer>
 
 </body>
-
 </html>

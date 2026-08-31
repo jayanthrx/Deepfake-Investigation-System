@@ -13,6 +13,20 @@ from reportlab.lib.pagesizes import A4
 
 import os
 import re
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
+def sanitize_pdf_text(text):
+    if text is None:
+        return ""
+    # Strip emojis and characters unprintable by standard PDF fonts
+    clean = "".join(c for c in str(text) if ord(c) < 128 or (160 <= ord(c) <= 255))
+    return clean if clean.strip() else "Investigation_File"
 
 
 # ============================================================
@@ -285,22 +299,22 @@ def generate_report(
 
         [
             "File Name",
-            str(filename)
+            sanitize_pdf_text(filename)
         ],
 
         [
             "Media Type",
-            str(media_type)
+            sanitize_pdf_text(media_type)
         ],
 
         [
             "Analysis Date",
-            str(date)
+            sanitize_pdf_text(date)
         ],
 
         [
             "Final Prediction",
-            str(result)
+            sanitize_pdf_text(result)
         ],
 
         [
@@ -310,7 +324,7 @@ def generate_report(
 
         [
             "Risk Level",
-            str(risk)
+            sanitize_pdf_text(risk)
         ]
 
     ]

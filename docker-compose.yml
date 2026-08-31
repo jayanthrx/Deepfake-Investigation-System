@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  deepfake-investigation:
+    build: .
+    container_name: deepfake_investigation_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./reports:/app/reports
+      - ./instance:/app/instance
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

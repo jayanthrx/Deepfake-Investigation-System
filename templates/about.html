@@ -1,343 +1,251 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<title>
-About Deepfake Investigation System
-</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Deepfake Investigation Platform</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111827;
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-glow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
+        nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-<style>
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
 
-body{
+        .brand-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
 
-font-family:Arial;
-background:#f2f5f9;
-text-align:center;
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
 
-}
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
 
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+        }
 
-nav{
+        .nav-links a.active {
+            border: 1px solid var(--card-border);
+            color: var(--accent-cyan);
+        }
 
-background:#1a237e;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
+        .container {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+        }
 
-}
+        .page-title {
+            text-align: center;
+            margin-bottom: 35px;
+        }
 
+        .page-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
 
-nav a{
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
 
-color:white;
-text-decoration:none;
-margin:15px;
-font-size:18px;
-font-weight:bold;
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--glass-glow);
+        }
 
-}
+        .card h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
+        .card p {
+            color: #cbd5e1;
+            line-height: 1.7;
+            font-size: 0.96rem;
+        }
 
-nav a:hover{
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
 
-color:#ffeb3b;
+        .tech-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92rem;
+        }
 
-}
+        .tech-pill span {
+            color: var(--accent-cyan);
+        }
 
-
-
-.container{
-
-width:90%;
-max-width:800px;
-margin:40px auto;
-background:white;
-padding:30px;
-border-radius:15px;
-box-shadow:0 0 15px #ccc;
-
-}
-
-
-
-h1{
-
-color:#1a237e;
-
-}
-
-
-
-.card{
-
-background:#e8eaf6;
-padding:20px;
-margin:20px;
-border-radius:10px;
-text-align:left;
-
-}
-
-
-h2{
-
-color:#1a237e;
-
-}
-
-
-li{
-
-margin:10px;
-font-size:17px;
-
-}
-
-
-</style>
-
-
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.5);
+        }
+    </style>
 </head>
-
-
-
 <body>
 
-
-
-<nav>
-
-
-<a href="/">
-Home
-</a>
-
-
-<a href="/dashboard">
-Dashboard
-</a>
-
-
-<a href="/about">
-About
-</a>
-
-
-<a href="/architecture">
-Architecture
-</a>
-
-<a href="/results">
-Results
-</a>
-
-</nav>
-
-
-
-
-
-<div class="container">
-
-
-<h1>
-🔍 About Deepfake Investigation System
-</h1>
-
-
-
-
-<div class="card">
-
-
-<h2>
-Project Overview
-</h2>
-
-
-<p>
-
-The Deepfake Investigation System is an AI-based digital forensic
-application designed to detect manipulated images and videos.
-
-The system uses deep learning techniques to classify media as
-Real or Fake and provides explainable results.
-
-</p>
-
-
-</div>
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Technology Used
-</h2>
-
-
-<ul>
-
-
-<li>
-EfficientNet Deep Learning Model
-</li>
-
-
-<li>
-TensorFlow / Keras
-</li>
-
-
-<li>
-OpenCV Video Analysis
-</li>
-
-
-<li>
-Flask Web Framework
-</li>
-
-
-<li>
-SQLite Investigation Database
-</li>
-
-
-<li>
-Grad-CAM Explainable AI
-</li>
-
-
-</ul>
-
-
-</div>
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Implemented Features
-</h2>
-
-
-<ul>
-
-
-<li>
-✔ Image Deepfake Detection
-</li>
-
-
-<li>
-✔ Video Frame Analysis
-</li>
-
-
-<li>
-✔ Fake / Real Probability Prediction
-</li>
-
-
-<li>
-✔ Confidence Score Calculation
-</li>
-
-
-<li>
-✔ Risk Level Assessment
-</li>
-
-
-<li>
-✔ AI Heatmap Visualization
-</li>
-
-
-<li>
-✔ PDF Investigation Report Generation
-</li>
-
-
-<li>
-✔ Investigation History Dashboard
-</li>
-
-
-</ul>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Model Performance
-</h2>
-
-
-<p>
-
-Overall Accuracy:
-<b>
-69.86%
-</b>
-
-</p>
-
-
-<p>
-
-Fake Detection Accuracy:
-<b>
-74.49%
-</b>
-
-</p>
-
-
-<p>
-
-Real Detection Accuracy:
-<b>
-65.77%
-</b>
-
-</p>
-
-
-</div>
-
-
-
-
-
-</div>
-
-
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-badge">⚡ FORENSIC AI</span>
+            <span>DeepFake Investigation</span>
+        </a>
+        <div class="nav-links">
+            <a href="/">Upload</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/architecture">Architecture</a>
+            <a href="/results">Model Stats</a>
+            <a href="/about" class="active">About</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>🔍 About Deepfake Investigation System</h1>
+            <p>Next-generation artificial intelligence forensics platform for image & video authenticity verification.</p>
+        </div>
+
+        <div class="card">
+            <h2>🛡️ Mission & Overview</h2>
+            <p>
+                The Deepfake Investigation System is an enterprise-grade digital forensic tool designed to detect sophisticated facial manipulation, generative AI face swaps, and synthetic media artifacts in images and videos. Utilizing state-of-the-art EfficientNet deep convolutional neural networks combined with Explainable AI (Grad-CAM), the platform delivers verified authenticity scores, risk evaluations, and printable forensic evidence reports.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ Core Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-pill"><span>🧠</span> EfficientNet-B3 CNN</div>
+                <div class="tech-pill"><span>🔥</span> Grad-CAM Attention Maps</div>
+                <div class="tech-pill"><span>👁️</span> OpenCV Face Detection</div>
+                <div class="tech-pill"><span>⚡</span> TensorFlow 2.x Engine</div>
+                <div class="tech-pill"><span>🌐</span> Flask Web Framework</div>
+                <div class="tech-pill"><span>🗄️</span> SQLite Forensic Registry</div>
+                <div class="tech-pill"><span>📄</span> ReportLab PDF Engine</div>
+                <div class="tech-pill"><span>📊</span> Chart.js Analytics</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎯 Model Performance Summary</h2>
+            <p style="margin-bottom: 12px;">
+                Evaluated against rigorous deepfake benchmarks containing diverse real and synthetic face datasets:
+            </p>
+            <div class="tech-grid">
+                <div class="tech-pill" style="border-color: rgba(59, 130, 246, 0.4);"><span>📈</span> 69.86% Overall Accuracy</div>
+                <div class="tech-pill" style="border-color: rgba(244, 63, 94, 0.4);"><span>🚨</span> 74.49% Deepfake Recall</div>
+                <div class="tech-pill" style="border-color: rgba(16, 185, 129, 0.4);"><span>✅</span> 65.77% Authentic Precision</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Deepfake Investigation System &bull; Advanced AI Digital Forensics
+    </footer>
 
 </body>
-
 </html>

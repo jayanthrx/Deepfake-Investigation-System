@@ -1,171 +1,959 @@
+# ============================================================
 # video_detector.py
+# DeepFake Investigation System
+# ============================================================
 
 import cv2
 import os
+import sys
 import numpy as np
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 from predictor import predict_image
 
 
-def detect_video(video_path):
-    """
-    Analyze a video by sampling frames.
+# ============================================================
+# CONFIGURATION
+# ============================================================
 
-    Returns exactly 3 values:
-        prediction, confidence, risk_level
-    """
+SAMPLE_EVERY = 10
+
+TEMP_FOLDER = "uploads"
+
+os.makedirs(
+    TEMP_FOLDER,
+    exist_ok=True
+)
+
+
+# ============================================================
+# EMPTY RESULT
+# ============================================================
+
+def empty_result(
+    prediction="Unknown",
+    confidence=0.0,
+    risk="Unknown"
+):
+
+    return (
+        prediction,
+        round(float(confidence), 2),
+        risk,
+
+        0,
+        0,
+        0,
+
+        0.0,
+        0.0,
+        0.0,
+
+        0.0,
+        0.0
+    )
+
+
+# ============================================================
+# VIDEO DETECTOR
+# ============================================================
+
+def detect_video(video_path):
+
+    print()
+    print("=" * 70)
+    print("VIDEO ANALYSIS STARTED")
+    print("Video:", video_path)
+    print("=" * 70)
+
+
+    # ========================================================
+    # CHECK FILE
+    # ========================================================
 
     if not os.path.exists(video_path):
-        return "Error", 0.0, "Unknown"
 
-    cap = cv2.VideoCapture(video_path)
+        print(
+            "ERROR: Video file does not exist."
+        )
+
+        return empty_result()
+
+
+    # ========================================================
+    # OPEN VIDEO
+    # ========================================================
+
+    cap = cv2.VideoCapture(
+        video_path
+    )
+
 
     if not cap.isOpened():
-        return "Error", 0.0, "Unknown"
+
+        print(
+            "ERROR: Could not open video."
+        )
+
+        return empty_result()
+
+
+    # ========================================================
+    # STORAGE
+    # ========================================================
 
     predictions = []
 
+    fake_probabilities = []
+
+    real_probabilities = []
+
+    confidences = []
+
+
+    fake_count = 0
+
+    real_count = 0
+
+    uncertain_count = 0
+
+
     frame_count = 0
-    sample_every = 10
+
+
+    # ========================================================
+    # READ VIDEO
+    # ========================================================
 
     while True:
 
         ret, frame = cap.read()
 
+
         if not ret:
             break
 
+
         frame_count += 1
 
-        # Analyze every 10th frame
-        if frame_count % sample_every != 0:
+
+        # ====================================================
+        # ANALYZE EVERY 10TH FRAME
+        # ====================================================
+
+        if frame_count % SAMPLE_EVERY != 0:
+
             continue
 
-        # Save temporary frame
+
+        # ====================================================
+        # TEMPORARY FRAME
+        # ====================================================
+
         temp_frame = os.path.join(
-            "uploads",
+
+            TEMP_FOLDER,
+
             f"_video_frame_{frame_count}.jpg"
         )
 
-        cv2.imwrite(temp_frame, frame)
+
+        success = cv2.imwrite(
+
+            temp_frame,
+
+            frame
+        )
+
+
+        if not success:
+
+            print(
+                "Could not save frame:",
+                frame_count
+            )
+
+            continue
+
 
         try:
-            result = predict_image(temp_frame)
 
-            # predictor.py may return:
-            # prediction, confidence, risk
-            if isinstance(result, tuple):
+            # =================================================
+            # IMAGE PREDICTION
+            # =================================================
 
-                if len(result) >= 3:
-                    prediction = result[0]
-                    confidence = float(result[1])
-                    risk = result[2]
+            result = predict_image(
+                temp_frame
+            )
+
+
+            # =================================================
+            # EXPECTED PREDICTOR FORMAT
+            #
+            # (
+            #     prediction,
+            #     confidence,
+            #     risk,
+            #     fake_probability,
+            #     real_probability
+            # )
+            # =================================================
+
+            if isinstance(
+                result,
+                (tuple, list)
+            ):
+
+                # ---------------------------------------------
+                # 5 VALUES
+                # ---------------------------------------------
+
+                if len(result) >= 5:
+
+                    prediction = str(
+                        result[0]
+                    )
+
+                    confidence = float(
+                        result[1]
+                    )
+
+                    risk = str(
+                        result[2]
+                    )
+
+                    fake_probability = float(
+                        result[3]
+                    )
+
+                    real_probability = float(
+                        result[4]
+                    )
+
+
+                # ---------------------------------------------
+                # 3 VALUES
+                # ---------------------------------------------
+
+                elif len(result) == 3:
+
+                    prediction = str(
+                        result[0]
+                    )
+
+                    confidence = float(
+                        result[1]
+                    )
+
+                    risk = str(
+                        result[2]
+                    )
+
+
+                    if prediction.lower() == "fake":
+
+                        fake_probability = confidence
+
+                        real_probability = (
+                            100.0
+                            - confidence
+                        )
+
+                    elif prediction.lower() == "real":
+
+                        real_probability = confidence
+
+                        fake_probability = (
+                            100.0
+                            - confidence
+                        )
+
+                    else:
+
+                        fake_probability = confidence
+
+                        real_probability = (
+                            100.0
+                            - confidence
+                        )
+
+
+                # ---------------------------------------------
+                # 2 VALUES
+                # ---------------------------------------------
 
                 elif len(result) == 2:
-                    prediction = result[0]
-                    confidence = float(result[1])
+
+                    prediction = str(
+                        result[0]
+                    )
+
+                    confidence = float(
+                        result[1]
+                    )
+
                     risk = "Medium"
+
+
+                    if prediction.lower() == "fake":
+
+                        fake_probability = confidence
+
+                        real_probability = (
+                            100.0
+                            - confidence
+                        )
+
+                    elif prediction.lower() == "real":
+
+                        real_probability = confidence
+
+                        fake_probability = (
+                            100.0
+                            - confidence
+                        )
+
+                    else:
+
+                        fake_probability = confidence
+
+                        real_probability = (
+                            100.0
+                            - confidence
+                        )
+
+
+                # ---------------------------------------------
+                # 1 VALUE
+                # ---------------------------------------------
+
+                elif len(result) == 1:
+
+                    prediction = str(
+                        result[0]
+                    )
+
+                    confidence = 50.0
+
+                    risk = "Medium"
+
+                    fake_probability = 50.0
+
+                    real_probability = 50.0
+
 
                 else:
-                    prediction = result[0]
-                    confidence = 50.0
-                    risk = "Medium"
+
+                    raise ValueError(
+                        "Empty predictor result."
+                    )
+
 
             else:
-                prediction = str(result)
+
+                prediction = str(
+                    result
+                )
+
                 confidence = 50.0
+
                 risk = "Medium"
 
-            predictions.append(
-                (
-                    str(prediction),
-                    confidence,
-                    str(risk)
+                fake_probability = 50.0
+
+                real_probability = 50.0
+
+
+            # =================================================
+            # LIMIT VALUES
+            # =================================================
+
+            fake_probability = max(
+                0.0,
+                min(
+                    100.0,
+                    fake_probability
                 )
             )
 
-        except Exception as e:
-            print("Frame prediction error:", e)
 
-        # Delete temporary frame
-        try:
-            if os.path.exists(temp_frame):
-                os.remove(temp_frame)
-        except:
-            pass
+            real_probability = max(
+                0.0,
+                min(
+                    100.0,
+                    real_probability
+                )
+            )
+
+
+            # =================================================
+            # NORMALIZE
+            # =================================================
+
+            probability_total = (
+
+                fake_probability
+                +
+                real_probability
+            )
+
+
+            if probability_total > 0:
+
+                fake_probability = (
+
+                    fake_probability
+                    /
+                    probability_total
+                    *
+                    100.0
+                )
+
+
+                real_probability = (
+
+                    real_probability
+                    /
+                    probability_total
+                    *
+                    100.0
+                )
+
+
+            # =================================================
+            # SAVE RESULTS
+            # =================================================
+
+            predictions.append(
+                prediction
+            )
+
+
+            fake_probabilities.append(
+                fake_probability
+            )
+
+
+            real_probabilities.append(
+                real_probability
+            )
+
+
+            confidences.append(
+                confidence
+            )
+
+
+            # =================================================
+            # COUNT PREDICTION
+            # =================================================
+
+            prediction_lower = (
+                prediction.lower()
+            )
+
+
+            if "fake" in prediction_lower:
+
+                fake_count += 1
+
+
+            elif "real" in prediction_lower:
+
+                real_count += 1
+
+
+            else:
+
+                uncertain_count += 1
+
+
+            # =================================================
+            # PRINT FRAME RESULT
+            # =================================================
+
+            print(
+                "======================"
+            )
+
+            print(
+                "File:",
+                temp_frame
+            )
+
+            print(
+                "Prediction:",
+                prediction
+            )
+
+            print(
+                "Confidence:",
+                round(
+                    confidence,
+                    2
+                ),
+                "%"
+            )
+
+            print(
+                "Fake Probability:",
+                round(
+                    fake_probability,
+                    2
+                ),
+                "%"
+            )
+
+            print(
+                "Real Probability:",
+                round(
+                    real_probability,
+                    2
+                ),
+                "%"
+            )
+
+            print(
+                "Risk:",
+                risk
+            )
+
+            print(
+                "======================"
+            )
+
+
+        except Exception as e:
+
+            print(
+                "Frame prediction error:",
+                e
+            )
+
+
+        finally:
+
+            # ===============================================
+            # DELETE TEMPORARY FRAME
+            # ===============================================
+
+            try:
+
+                if os.path.exists(
+                    temp_frame
+                ):
+
+                    os.remove(
+                        temp_frame
+                    )
+
+            except Exception:
+
+                pass
+
+
+    # ========================================================
+    # RELEASE VIDEO
+    # ========================================================
 
     cap.release()
 
-    # No frames analyzed
-    if len(predictions) == 0:
-        return "Unknown", 0.0, "Unknown"
 
-    # ------------------------------------------------
-    # Calculate final video result
-    # ------------------------------------------------
+    # ========================================================
+    # CHECK RESULTS
+    # ========================================================
 
-    fake_count = 0
-    real_count = 0
-
-    confidences = []
-
-    for prediction, confidence, risk in predictions:
-
-        prediction_lower = prediction.lower()
-
-        if "fake" in prediction_lower:
-            fake_count += 1
-        elif "real" in prediction_lower:
-            real_count += 1
-
-        confidences.append(confidence)
-
-    average_confidence = float(
-        np.mean(confidences)
+    analyzed_frames = len(
+        predictions
     )
 
-    total_frames = fake_count + real_count
 
-    if total_frames == 0:
-        return "Unknown", average_confidence, "Medium"
+    if analyzed_frames == 0:
+
+        print(
+            "ERROR: No frames were analyzed."
+        )
+
+        return empty_result()
+
+
+    # ========================================================
+    # PERCENTAGES
+    # ========================================================
 
     fake_percentage = (
-        fake_count / total_frames
-    ) * 100
+
+        fake_count
+        /
+        analyzed_frames
+        *
+        100.0
+    )
+
 
     real_percentage = (
-        real_count / total_frames
-    ) * 100
 
-    # ------------------------------------------------
-    # Final classification
-    # ------------------------------------------------
+        real_count
+        /
+        analyzed_frames
+        *
+        100.0
+    )
 
-    if fake_percentage >= 60:
+
+    uncertain_percentage = (
+
+        uncertain_count
+        /
+        analyzed_frames
+        *
+        100.0
+    )
+
+
+    # ========================================================
+    # AVERAGE PROBABILITIES
+    # ========================================================
+
+    average_fake_probability = float(
+
+        np.mean(
+            fake_probabilities
+        )
+    )
+
+
+    average_real_probability = float(
+
+        np.mean(
+            real_probabilities
+        )
+    )
+
+
+    # ========================================================
+    # AVERAGE CONFIDENCE
+    # ========================================================
+
+    average_confidence = float(
+
+        np.mean(
+            confidences
+        )
+    )
+
+
+    # ========================================================
+    # FINAL PREDICTION
+    # ========================================================
+
+    if fake_count > real_count:
 
         final_prediction = "Fake"
 
-        if fake_percentage >= 80:
-            risk_level = "High"
-        else:
-            risk_level = "Medium"
+        final_confidence = (
+            average_fake_probability
+        )
 
-    elif real_percentage >= 60:
+
+    elif real_count > fake_count:
 
         final_prediction = "Real"
 
-        if real_percentage >= 80:
-            risk_level = "Low"
-        else:
-            risk_level = "Medium"
+        final_confidence = (
+            average_real_probability
+        )
+
 
     else:
 
+        # Equal number of fake and real frames
+
+        if (
+            average_fake_probability
+            >
+            average_real_probability
+        ):
+
+            final_prediction = "Fake"
+
+            final_confidence = (
+                average_fake_probability
+            )
+
+        elif (
+            average_real_probability
+            >
+            average_fake_probability
+        ):
+
+            final_prediction = "Real"
+
+            final_confidence = (
+                average_real_probability
+            )
+
+        else:
+
+            final_prediction = "Uncertain"
+
+            final_confidence = (
+                average_confidence
+            )
+
+
+    # ========================================================
+    # UNCERTAINTY CHECK
+    # ========================================================
+
+    probability_difference = abs(
+
+        average_fake_probability
+        -
+        average_real_probability
+    )
+
+
+    if probability_difference < 5:
+
         final_prediction = "Uncertain"
+
+        final_confidence = max(
+
+            average_fake_probability,
+
+            average_real_probability
+        )
+
+
+    # ========================================================
+    # RISK LEVEL
+    # ========================================================
+
+    if final_prediction == "Fake":
+
+        if (
+
+            fake_percentage >= 70
+
+            and
+
+            average_fake_probability >= 80
+        ):
+
+            risk_level = "Very High"
+
+
+        elif (
+
+            fake_percentage >= 50
+
+            or
+
+            average_fake_probability >= 70
+        ):
+
+            risk_level = "High"
+
+
+        elif (
+
+            fake_percentage >= 30
+
+            or
+
+            average_fake_probability >= 60
+        ):
+
+            risk_level = "Medium"
+
+
+        else:
+
+            risk_level = "Low"
+
+
+    elif final_prediction == "Real":
+
+        if average_real_probability >= 60:
+
+            risk_level = "Low"
+
+        else:
+
+            risk_level = "Medium"
+
+
+    else:
+
         risk_level = "Medium"
 
-    return (
-        final_prediction,
-        round(average_confidence, 2),
+
+    # ========================================================
+    # ROUND VALUES
+    # ========================================================
+
+    final_confidence = round(
+        final_confidence,
+        2
+    )
+
+
+    fake_percentage = round(
+        fake_percentage,
+        2
+    )
+
+
+    real_percentage = round(
+        real_percentage,
+        2
+    )
+
+
+    uncertain_percentage = round(
+        uncertain_percentage,
+        2
+    )
+
+
+    average_fake_probability = round(
+        average_fake_probability,
+        2
+    )
+
+
+    average_real_probability = round(
+        average_real_probability,
+        2
+    )
+
+
+    # ========================================================
+    # FINAL TERMINAL OUTPUT
+    # ========================================================
+
+    print()
+    print("=" * 70)
+
+    print(
+        "FINAL VIDEO RESULT"
+    )
+
+    print("=" * 70)
+
+
+    print(
+        "Prediction:",
+        final_prediction
+    )
+
+
+    print(
+        "Confidence:",
+        final_confidence,
+        "%"
+    )
+
+
+    print(
+        "Fake Frames:",
+        fake_count
+    )
+
+
+    print(
+        "Real Frames:",
+        real_count
+    )
+
+
+    print(
+        "Uncertain Frames:",
+        uncertain_count
+    )
+
+
+    print(
+        "Analyzed Frames:",
+        analyzed_frames
+    )
+
+
+    print(
+        "Fake Percentage:",
+        fake_percentage,
+        "%"
+    )
+
+
+    print(
+        "Real Percentage:",
+        real_percentage,
+        "%"
+    )
+
+
+    print(
+        "Uncertain Percentage:",
+        uncertain_percentage,
+        "%"
+    )
+
+
+    print(
+        "Average Fake Probability:",
+        average_fake_probability,
+        "%"
+    )
+
+
+    print(
+        "Average Real Probability:",
+        average_real_probability,
+        "%"
+    )
+
+
+    print(
+        "Risk:",
         risk_level
+    )
+
+
+    print("=" * 70)
+
+
+    # ========================================================
+    # IMPORTANT:
+    # RETURN EXACTLY 11 VALUES
+    # ========================================================
+
+    return (
+
+        final_prediction,
+
+        final_confidence,
+
+        risk_level,
+
+        fake_count,
+
+        real_count,
+
+        uncertain_count,
+
+        fake_percentage,
+
+        real_percentage,
+
+        uncertain_percentage,
+
+        average_fake_probability,
+
+        average_real_probability
     )

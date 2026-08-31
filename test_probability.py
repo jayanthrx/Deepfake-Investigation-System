@@ -1,53 +1,19 @@
-from predictor import model, processor, device
+import os
+from predictor import predict_image
 
-from PIL import Image
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-import torch
+image_path = os.path.join(BASE_DIR, "uploads", "real_00010.jpg")
+if not os.path.exists(image_path):
+    image_path = os.path.join(BASE_DIR, "test.jpg")
 
+print("Testing Image:", image_path)
 
+label, confidence, risk, fake_prob, real_prob = predict_image(image_path)
 
-image_path = "uploads/real_00010.jpg"
-
-
-
-image = Image.open(
-    image_path
-).convert("RGB")
-
-
-
-inputs = processor(
-    images=image,
-    return_tensors="pt"
-)
-
-
-
-inputs = {
-    k:v.to(device)
-    for k,v in inputs.items()
-}
-
-
-
-with torch.no_grad():
-
-    output = model(
-        **inputs
-    )
-
-
-
-prob = torch.softmax(
-    output.logits,
-    dim=1
-)
-
-
-
-print("Real probability :", 
-      prob[0][0].item()*100)
-
-
-print("Fake probability :", 
-      prob[0][1].item()*100)
+print("\n--- Summary ---")
+print("Prediction        :", label)
+print("Confidence        :", confidence, "%")
+print("Real Probability  :", real_prob, "%")
+print("Fake Probability  :", fake_prob, "%")
+print("Risk Level        :", risk)

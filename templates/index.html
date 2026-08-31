@@ -1,502 +1,1050 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>
-Deepfake Investigation System
-</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-
-
-<style>
-
-
-body{
-
-font-family:Arial, sans-serif;
-background:#f2f5f9;
-text-align:center;
-
-}
-
-
-
-/* NAVIGATION */
-
-nav{
-
-background:#1a237e;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
-
-}
-
-
-
-nav a{
-
-color:white;
-text-decoration:none;
-margin:15px;
-font-size:18px;
-font-weight:bold;
-
-}
-
-
-
-nav a:hover{
-
-color:#ffeb3b;
-
-}
-
-
-
-
-.container{
-
-margin:40px auto;
-width:90%;
-max-width:750px;
-background:white;
-padding:30px;
-border-radius:15px;
-box-shadow:0 0 15px #ccc;
-
-}
-
-
-
-
-
-h1{
-
-color:#1a237e;
-font-size:32px;
-
-}
-
-
-
-
-.subtitle{
-
-font-size:18px;
-color:#555;
-
-}
-
-
-
-
-
-input[type=file]{
-
-padding:15px;
-border:1px solid #ccc;
-border-radius:10px;
-
-}
-
-
-
-
-
-button{
-
-background:#1a237e;
-color:white;
-border:none;
-padding:15px 30px;
-border-radius:10px;
-font-size:16px;
-cursor:pointer;
-margin:10px;
-
-}
-
-
-
-button:hover{
-
-background:#3949ab;
-
-}
-
-
-
-
-
-.card{
-
-background:#e8eaf6;
-padding:20px;
-margin-top:25px;
-border-radius:10px;
-
-}
-
-
-
-
-
-.cards{
-
-display:flex;
-justify-content:center;
-gap:15px;
-flex-wrap:wrap;
-margin-top:20px;
-
-}
-
-
-
-
-
-.small-card{
-
-background:#e8eaf6;
-padding:20px;
-border-radius:10px;
-width:150px;
-
-}
-
-
-
-.small-card h3{
-
-font-size:30px;
-color:#1a237e;
-
-}
-
-
-
-
-
-.feature{
-
-text-align:left;
-font-size:17px;
-line-height:32px;
-
-}
-
-
-
-
-
-.footer{
-
-margin-top:25px;
-color:#555;
-
-}
-
-
-
-</style>
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Investigation System | AI Forensic Platform</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #111827;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAVIGATION */
+        nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-links a.active {
+            border: 1px solid var(--card-border);
+            color: var(--accent-cyan);
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 20px;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* HERO HEADER */
+        .hero {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .hero-badge .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        /* TAB CONTROLS */
+        .tab-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--text-main);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        /* UPLOAD CARD */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: var(--glass-glow);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-cyan), transparent);
+        }
+
+        /* DROP ZONE */
+        .drop-zone {
+            border: 2px dashed rgba(59, 130, 246, 0.4);
+            border-radius: 16px;
+            padding: 45px 20px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.05);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .drop-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+        }
+
+        .drop-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .drop-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .drop-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* PREVIEW BOX */
+        .preview-container {
+            display: none;
+            margin-top: 24px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--card-border);
+            text-align: left;
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .preview-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .file-size {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .remove-btn {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: var(--accent-rose);
+            color: white;
+        }
+
+        .preview-media-wrapper {
+            max-height: 280px;
+            overflow: hidden;
+            border-radius: 8px;
+            text-align: center;
+            background: #000;
+        }
+
+        .preview-media-wrapper img, .preview-media-wrapper video {
+            max-width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+        }
+
+        /* SUBMIT BUTTON */
+        .submit-btn {
+            width: 100%;
+            margin-top: 24px;
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #60a5fa, var(--accent-blue));
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* WEBCAM SECTION */
+        .webcam-container {
+            display: none;
+            text-align: center;
+        }
+
+        .webcam-view-box {
+            position: relative;
+            max-width: 580px;
+            margin: 0 auto 20px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(6, 182, 212, 0.4);
+            background: #000;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+        }
+
+        #webcamVideo {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+
+        .scan-laser {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #06b6d4;
+            box-shadow: 0 0 15px #06b6d4, 0 0 30px #06b6d4;
+            animation: scanLaser 2s ease-in-out infinite alternate;
+            display: none;
+        }
+
+        @keyframes scanLaser {
+            0% { top: 5%; }
+            100% { top: 95%; }
+        }
+
+        .webcam-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn-cam {
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cam-start {
+            background: linear-gradient(135deg, var(--accent-emerald), #059669);
+            color: white;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-cam-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-cam-stop {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-cam-stop:hover {
+            background: var(--accent-rose);
+            color: white;
+        }
+
+        /* LIVE TELEMETRY DISPLAY */
+        .telemetry-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 18px;
+            max-width: 580px;
+            margin: 0 auto;
+            text-align: left;
+            display: none;
+        }
+
+        .telemetry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .telemetry-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* METRIC CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            backdrop-filter: blur(12px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .stat-rose { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+        .stat-emerald { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* FEATURE HIGHLIGHTS */
+        .feature-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 30px;
+        }
+
+        .feature-box h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .feature-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-pill span {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* ACTION FOOTER */
+        .action-row {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* LOADING MODAL */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 15, 29, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-card {
+            background: #111827;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.25);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .loading-step {
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 24px;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            background: rgba(15, 23, 42, 0.5);
+        }
+    </style>
 </head>
-
-
-
 <body>
 
-
-
-
-<!-- NAVBAR -->
-
-<nav>
-
-
-<a href="/">
-Home
-</a>
-
-
-<a href="/dashboard">
-Dashboard
-</a>
-
-
-<a href="/about">
-About
-</a>
-
-
-<a href="/architecture">
-Architecture
-</a>
-
-
-<a href="/results">
-Results
-</a>
-
-
-</nav>
-
-
-
-
-
-
-
-<div class="container">
-
-
-
-<h1>
-🔍 Deepfake Investigation System
-</h1>
-
-
-
-<p class="subtitle">
-
-AI Based Image & Video Authenticity Analysis
-
-</p>
-
-
-
-
-
-
-
-<form action="/predict" method="POST" enctype="multipart/form-data">
-
-
-<input
-type="file"
-name="file"
-accept="image/*,video/*"
-required
->
-
-
-<br><br>
-
-
-<button type="submit">
-
-Analyze Media
-
-</button>
-
-
-</form>
-
-
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-About System
-</h2>
-
-
-<p>
-
-Deepfake Investigation System is an AI based digital
-forensic application that detects manipulated images
-and videos using EfficientNet Deep Learning.
-
-The system provides prediction, confidence,
-risk assessment, Grad-CAM explanation and PDF reports.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="cards">
-
-
-
-<div class="small-card">
-
-<h3>
-69.86%
-</h3>
-
-<p>
-Model Accuracy
-</p>
-
-</div>
-
-
-
-
-
-<div class="small-card">
-
-<h3>
-74.49%
-</h3>
-
-<p>
-Fake Detection
-</p>
-
-</div>
-
-
-
-
-
-<div class="small-card">
-
-<h3>
-65.77%
-</h3>
-
-<p>
-Real Detection
-</p>
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Implemented Features
-</h2>
-
-
-
-<div class="feature">
-
-
-✔ EfficientNet Deep Learning Classification
-<br>
-
-✔ Image Deepfake Detection
-<br>
-
-✔ Video Frame Analysis
-<br>
-
-✔ Fake / Real Probability Prediction
-<br>
-
-✔ Confidence Score Calculation
-<br>
-
-✔ Risk Level Assessment
-<br>
-
-✔ Grad-CAM Explainable AI
-<br>
-
-✔ PDF Investigation Report
-<br>
-
-✔ Investigation History Dashboard
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-<br>
-
-
-
-<a href="/dashboard">
-
-<button>
-
-📊 View Dashboard
-
-</button>
-
-</a>
-
-
-
-
-
-<a href="/results">
-
-<button>
-
-📈 Model Results
-
-</button>
-
-</a>
-
-
-
-
-
-
-<div class="footer">
-
-<p>
-
-Deepfake Investigation System
-<br>
-AI Based Digital Forensics Project
-
-</p>
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="nav-brand">
+            <span class="brand-badge">⚡ FORENSIC AI</span>
+            <span>DeepFake Investigation</span>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="active">Upload</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/architecture">Architecture</a>
+            <a href="/results">Model Stats</a>
+            <a href="/about">About</a>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="container">
+
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-badge">
+                <span class="pulse-dot"></span>
+                <span>EfficientNet-B3 Deep Learning Forensics</span>
+            </div>
+            <h1>AI Media Authenticity Analysis</h1>
+            <p>Upload suspect media or scan live webcam video with facial auto-cropping, Grad-CAM attention heatmaps, and forensic PDF reports.</p>
+        </div>
+
+        <!-- MODE TABS -->
+        <div class="tab-switcher">
+            <button type="button" class="tab-btn active" id="tabUploadBtn" onclick="switchMode('upload')">📁 File Upload</button>
+            <button type="button" class="tab-btn" id="tabCamBtn" onclick="switchMode('webcam')">📹 Live Webcam Scanner</button>
+        </div>
+
+        <!-- UPLOAD SECTION -->
+        <div class="glass-card" id="uploadCard">
+            <form id="uploadForm" action="/predict" method="POST" enctype="multipart/form-data">
+                
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="drop-icon">🛡️</div>
+                    <div class="drop-title">Drop your image or video here</div>
+                    <div class="drop-subtitle">or click to browse your device files</div>
+                    <div class="drop-badge">JPG, PNG, WEBP, MP4, AVI, MOV, MKV</div>
+                    <input type="file" id="fileInput" name="file" accept="image/*,video/*" required>
+                </div>
+
+                <!-- PREVIEW CONTAINER -->
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-header">
+                        <div class="preview-info">
+                            <div class="file-icon" id="fileIcon">📄</div>
+                            <div>
+                                <div class="file-name" id="fileName">filename.jpg</div>
+                                <div class="file-size" id="fileSize">0 KB</div>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-btn" onclick="clearFileSelection()">Remove</button>
+                    </div>
+                    <div class="preview-media-wrapper" id="previewMedia"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    <span>🔍 Run Forensic Investigation</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- WEBCAM SCANNER SECTION -->
+        <div class="glass-card webcam-container" id="webcamCard">
+            <div class="webcam-view-box">
+                <video id="webcamVideo" autoplay playsinline muted></video>
+                <div class="scan-laser" id="scanLaser"></div>
+            </div>
+
+            <div class="webcam-controls">
+                <button type="button" class="btn-cam btn-cam-start" id="startCamBtn" onclick="startCamera()">📷 Open Camera</button>
+                <button type="button" class="btn-cam btn-cam-start" id="liveScanBtn" onclick="toggleLiveScan()" style="display:none;">⚡ Start Live Scan</button>
+                <button type="button" class="btn-cam btn-cam-stop" id="stopCamBtn" onclick="stopCamera()" style="display:none;">⏹️ Stop Camera</button>
+            </div>
+
+            <!-- LIVE TELEMETRY -->
+            <div class="telemetry-card" id="telemetryCard">
+                <div class="telemetry-header">
+                    <span style="font-weight:700;">Live Frame Verdict:</span>
+                    <span class="telemetry-badge" id="telemetryBadge">Authentic</span>
+                </div>
+                <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom: 6px;">
+                    Confidence: <strong id="telemetryConf" style="color:var(--accent-cyan);">--</strong> | 
+                    Risk Level: <strong id="telemetryRisk">--</strong>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">
+                    Scans performed every 1.5 seconds.
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon stat-blue">🎯</div>
+                <div>
+                    <div class="stat-value">69.86%</div>
+                    <div class="stat-label">Model Overall Accuracy</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-rose">🚨</div>
+                <div>
+                    <div class="stat-value">74.49%</div>
+                    <div class="stat-label">Synthetic Manipulation Recall</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-emerald">✅</div>
+                <div>
+                    <div class="stat-value">65.77%</div>
+                    <div class="stat-label">Authentic Detection Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="feature-box">
+            <h2>⚡ Investigation Capabilities</h2>
+            <div class="feature-grid">
+                <div class="feature-pill"><span>✔</span> Face Auto-Cropping Pipeline</div>
+                <div class="feature-pill"><span>✔</span> EfficientNet Deep Neural Network</div>
+                <div class="feature-pill"><span>✔</span> Frame-by-Frame Video Sampling</div>
+                <div class="feature-pill"><span>✔</span> Grad-CAM Explainable Heatmap</div>
+                <div class="feature-pill"><span>✔</span> Real-Time Live Webcam Scanner</div>
+                <div class="feature-pill"><span>✔</span> Cryptographic Forensic PDF</div>
+                <div class="feature-pill"><span>✔</span> Central SQLite Case History</div>
+                <div class="feature-pill"><span>✔</span> 1-Click CSV Log Export</div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-row">
+            <a href="/dashboard" class="btn-secondary">📊 Open Investigation Dashboard</a>
+            <a href="/results" class="btn-secondary">📈 Evaluation Metrics</a>
+            <a href="/architecture" class="btn-secondary">🏗️ View Architecture</a>
+        </div>
+
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-card">
+            <div class="spinner"></div>
+            <div class="loading-title">Analyzing Media...</div>
+            <div class="loading-step" id="loadingStep">Aligning face landmarks...</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        Deepfake Investigation System &bull; Advanced AI Digital Forensics &bull; Powered by Google DeepMind Technologies & TensorFlow
+    </footer>
+
+    <!-- SCRIPT -->
+    <script>
+        // Tab switcher
+        function switchMode(mode) {
+            const uploadCard = document.getElementById('uploadCard');
+            const webcamCard = document.getElementById('webcamCard');
+            const tabUploadBtn = document.getElementById('tabUploadBtn');
+            const tabCamBtn = document.getElementById('tabCamBtn');
+
+            if (mode === 'upload') {
+                uploadCard.style.display = 'block';
+                webcamCard.style.display = 'none';
+                tabUploadBtn.classList.add('active');
+                tabCamBtn.classList.remove('active');
+                stopCamera();
+            } else {
+                uploadCard.style.display = 'none';
+                webcamCard.style.display = 'block';
+                tabCamBtn.classList.add('active');
+                tabUploadBtn.classList.remove('active');
+            }
+        }
+
+        // Upload drag & drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewMedia = document.getElementById('previewMedia');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileIcon = document.getElementById('fileIcon');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingStep = document.getElementById('loadingStep');
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            previewMedia.innerHTML = '';
+            
+            const isVideo = file.type.startsWith('video/') || /\.(mp4|avi|mov|mkv|webm)$/i.test(file.name);
+            const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|bmp)$/i.test(file.name);
+
+            if (isImage) {
+                fileIcon.textContent = '🖼️';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                previewMedia.appendChild(img);
+            } else if (isVideo) {
+                fileIcon.textContent = '🎬';
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                previewMedia.appendChild(video);
+            } else {
+                fileIcon.textContent = '📁';
+            }
+
+            previewContainer.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+
+        function clearFileSelection() {
+            fileInput.value = '';
+            previewContainer.style.display = 'none';
+            previewMedia.innerHTML = '';
+            submitBtn.disabled = true;
+        }
+
+        const steps = [
+            "Aligning and pre-processing facial features...",
+            "Passing frames into EfficientNet neural network...",
+            "Computing activation gradients and Grad-CAM heatmap...",
+            "Calculating synthetic artifact confidence and risk...",
+            "Assembling forensic investigation PDF report..."
+        ];
+
+        uploadForm.addEventListener('submit', () => {
+            loadingOverlay.style.display = 'flex';
+            let stepIdx = 0;
+            setInterval(() => {
+                stepIdx = (stepIdx + 1) % steps.length;
+                loadingStep.textContent = steps[stepIdx];
+            }, 1200);
+        });
+
+        // WEBCAM STREAM & SCANNER
+        let stream = null;
+        let scanInterval = null;
+        const webcamVideo = document.getElementById('webcamVideo');
+        const startCamBtn = document.getElementById('startCamBtn');
+        const liveScanBtn = document.getElementById('liveScanBtn');
+        const stopCamBtn = document.getElementById('stopCamBtn');
+        const scanLaser = document.getElementById('scanLaser');
+        const telemetryCard = document.getElementById('telemetryCard');
+        const telemetryBadge = document.getElementById('telemetryBadge');
+        const telemetryConf = document.getElementById('telemetryConf');
+        const telemetryRisk = document.getElementById('telemetryRisk');
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                webcamVideo.srcObject = stream;
+                startCamBtn.style.display = 'none';
+                liveScanBtn.style.display = 'inline-flex';
+                stopCamBtn.style.display = 'inline-flex';
+            } catch (err) {
+                alert("Camera access error: " + err.message);
+            }
+        }
+
+        function stopCamera() {
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            webcamVideo.srcObject = null;
+            scanLaser.style.display = 'none';
+            telemetryCard.style.display = 'none';
+            startCamBtn.style.display = 'inline-flex';
+            liveScanBtn.style.display = 'none';
+            liveScanBtn.textContent = '⚡ Start Live Scan';
+            stopCamBtn.style.display = 'none';
+        }
+
+        function toggleLiveScan() {
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+                scanLaser.style.display = 'none';
+                liveScanBtn.textContent = '⚡ Start Live Scan';
+            } else {
+                scanLaser.style.display = 'block';
+                telemetryCard.style.display = 'block';
+                liveScanBtn.textContent = '⏸️ Pause Live Scan';
+                scanFrame();
+                scanInterval = setInterval(scanFrame, 1500);
+            }
+        }
+
+        async function scanFrame() {
+            if (!stream || !webcamVideo.videoWidth) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = webcamVideo.videoWidth;
+            canvas.height = webcamVideo.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(webcamVideo, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+                const formData = new FormData();
+                formData.append('file', blob, 'webcam_frame.jpg');
+
+                try {
+                    const resp = await fetch('/api/predict', { method: 'POST', body: formData });
+                    const result = await resp.json();
+                    if (result.success) {
+                        telemetryConf.textContent = result.confidence + '%';
+                        telemetryRisk.textContent = result.risk;
+                        if (result.prediction === 'Fake') {
+                            telemetryBadge.textContent = '🚨 FAKE DETECTED';
+                            telemetryBadge.style.background = 'rgba(244, 63, 94, 0.2)';
+                            telemetryBadge.style.color = '#f43f5e';
+                            telemetryBadge.style.border = '1px solid #f43f5e';
+                        } else if (result.prediction === 'Real') {
+                            telemetryBadge.textContent = '✅ AUTHENTIC REAL';
+                            telemetryBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                            telemetryBadge.style.color = '#10b981';
+                            telemetryBadge.style.border = '1px solid #10b981';
+                        } else {
+                            telemetryBadge.textContent = '⚠️ UNCERTAIN';
+                            telemetryBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+                            telemetryBadge.style.color = '#f59e0b';
+                            telemetryBadge.style.border = '1px solid #f59e0b';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Live scan error:", e);
+                }
+            }, 'image/jpeg', 0.9);
+        }
+    </script>
 </body>
-
 </html>

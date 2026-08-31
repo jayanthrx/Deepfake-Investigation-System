@@ -2,9 +2,15 @@
 # EfficientNet v3 Grad-CAM Heatmap Generator
 
 import os
+import sys
 import tensorflow as tf
 import numpy as np
 import cv2
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.efficientnet import preprocess_input
@@ -13,36 +19,42 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 IMG_SIZE = 300
 
 
+from predictor import extract_face
+
 # ==============================
 # GENERATE HEATMAP
 # ==============================
 
-def generate_heatmap(model, img_path, processor=None, device=None):
+def generate_heatmap(model, img_path, processor=None, device=None, output_path=None):
 
     try:
 
         # ==============================
-        # LOAD IMAGE
+        # LOAD IMAGE & EXTRACT FACE
         # ==============================
 
-        img = image.load_img(
-            img_path,
-            target_size=(IMG_SIZE, IMG_SIZE)
-        )
-
-
-        img_array = image.img_to_array(img)
-
-
-        img_array = np.expand_dims(
-            img_array,
-            axis=0
-        )
-
-
-        img_array = preprocess_input(
-            img_array
-        )
+        cv_img = cv2.imread(img_path)
+        if cv_img is not None:
+            cropped_face = extract_face(cv_img)
+            rgb_face = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+            resized_face = cv2.resize(rgb_face, (IMG_SIZE, IMG_SIZE))
+            img_array = np.expand_dims(resized_face.astype(np.float32), axis=0)
+            img_array = preprocess_input(img_array)
+            base_overlay_img = cropped_face
+        else:
+            img = image.load_img(
+                img_path,
+                target_size=(IMG_SIZE, IMG_SIZE)
+            )
+            img_array = image.img_to_array(img)
+            img_array = np.expand_dims(
+                img_array,
+                axis=0
+            )
+            img_array = preprocess_input(
+                img_array
+            )
+            base_overlay_img = None
 
 
 
@@ -99,10 +111,12 @@ def generate_heatmap(model, img_path, processor=None, device=None):
 
         with tf.GradientTape() as tape:
 
-
-            conv_output, prediction = grad_model(
-               {"input_layer": img_array}
-            )
+            try:
+                conv_output, prediction = grad_model(img_array)
+            except Exception:
+                conv_output, prediction = grad_model(
+                    {"input_layer": img_array}
+                )
 
 
             loss = prediction[:,0]
@@ -173,18 +187,17 @@ def generate_heatmap(model, img_path, processor=None, device=None):
         # ORIGINAL IMAGE
         # ==============================
 
+        if base_overlay_img is not None:
+            original = base_overlay_img
+        else:
+            original = cv2.imread(img_path)
 
-        original = cv2.imread(
-            img_path
-        )
-
+        if original is None:
+            return None
 
         original = cv2.resize(
-
             original,
-
-            (IMG_SIZE,IMG_SIZE)
-
+            (IMG_SIZE, IMG_SIZE)
         )
 
 
@@ -226,23 +239,20 @@ def generate_heatmap(model, img_path, processor=None, device=None):
         # SAVE
         # ==============================
 
+        if output_path is None:
+            os.makedirs(
+                "uploads",
+                exist_ok=True
+            )
 
-        os.makedirs(
-
-            "uploads",
-
-            exist_ok=True
-
-        )
-
-
-        output_path = os.path.join(
-
-            "uploads",
-
-            "heatmap.jpg"
-
-        )
+            output_path = os.path.join(
+                "uploads",
+                "heatmap.jpg"
+            )
+        else:
+            out_dir = os.path.dirname(output_path)
+            if out_dir:
+                os.makedirs(out_dir, exist_ok=True)
 
 
         cv2.imwrite(
