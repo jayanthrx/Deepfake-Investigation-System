@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: deepfake-investigation-system
+    runtime: python
+    buildCommand: "pip install -r requirements.txt && pip install gunicorn huggingface_hub"
+    startCommand: "python download_model.py && gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: HF_REPO_ID
+        sync: false   # You will set this in Render dashboard
+      - key: FLASK_ENV
+        value: production
+    disk:
+      name: app-storage
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1
