@@ -67,6 +67,9 @@ tmp_checkpoint/*
 *.bmp
 *.webp
 *.avif
+!static/*.png
+!static/*.ico
+!static/*.jpg
 
 # ============================================================
 # VIDEO FILES
