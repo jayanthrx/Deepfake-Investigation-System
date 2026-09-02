@@ -124,9 +124,10 @@ def generate_heatmap(model=None, img_path=None, processor=None, device_param=Non
                 import tensorflow as tf
                 from tensorflow.keras.applications.efficientnet import preprocess_input
 
-                IMG_SIZE = 224
+                in_shape = getattr(use_model, "input_shape", None)
+                k_size = int(in_shape[1]) if (in_shape and len(in_shape) >= 3 and in_shape[1] is not None) else 224
                 rgb_face = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
-                resized_face = cv2.resize(rgb_face, (IMG_SIZE, IMG_SIZE))
+                resized_face = cv2.resize(rgb_face, (k_size, k_size))
                 img_array = np.expand_dims(resized_face.astype(np.float32), axis=0)
                 img_array = preprocess_input(img_array)
 

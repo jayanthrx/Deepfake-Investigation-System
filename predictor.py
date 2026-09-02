@@ -32,6 +32,8 @@ KERAS_MODEL_PATH = os.path.join(BASE_DIR, "deepfake_efficientnet_v3.keras")
 device = None
 model = None
 model_type = None
+torch = None
+tf = None
 class_to_idx = {"fake": 0, "real": 1}
 idx_to_class = {0: "fake", 1: "real"}
 IMG_SIZE = 224
@@ -102,17 +104,25 @@ def get_dual_stream_classes(torch_mod, timm_mod):
     return DualStreamDeepfakeDetector, ForensicEnsembleDetector
 
 
+DualStreamDetector = None
+EnsembleDetector = None
+ForensicEnsembleDetector = None
+DualStreamDeepfakeDetector = None
+
+
 def load_detector_model():
-    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE, eval_transform, device
+    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE, eval_transform, device, torch, tf
+    global DualStreamDetector, EnsembleDetector, ForensicEnsembleDetector, DualStreamDeepfakeDetector
 
     # 1. Try loading PyTorch model if .pt exists
     if os.path.exists(PYTORCH_MODEL_PATH):
         try:
             print(f"[*] Loading PyTorch Deepfake Detector: {PYTORCH_MODEL_PATH}")
-            import torch
+            import torch as _torch
             import torchvision.transforms as transforms
             import timm
 
+            torch = _torch
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             checkpoint = torch.load(PYTORCH_MODEL_PATH, map_location=device)
             class_to_idx = checkpoint.get("class_to_idx", {"fake": 0, "real": 1})
@@ -126,6 +136,8 @@ def load_detector_model():
             ])
 
             DualStreamDetector, EnsembleDetector = get_dual_stream_classes(torch, timm)
+            DualStreamDeepfakeDetector = DualStreamDetector
+            ForensicEnsembleDetector = EnsembleDetector
 
             if checkpoint.get("is_ensemble"):
                 m_a_name = checkpoint.get("model_a_name", "efficientnet_b0")
@@ -175,7 +187,12 @@ def load_detector_model():
             tf.config.threading.set_intra_op_parallelism_threads(1)
             model = tf.keras.models.load_model(keras_path, compile=False)
             model_type = "keras"
-            print("[+] Keras model loaded successfully (lightweight inference mode)")
+            in_shape = getattr(model, "input_shape", None)
+            if in_shape and len(in_shape) >= 3 and in_shape[1] is not None:
+                IMG_SIZE = int(in_shape[1])
+            else:
+                IMG_SIZE = 224
+            print(f"[+] Keras model loaded successfully (lightweight mode, size={IMG_SIZE}x{IMG_SIZE})")
             return
         except Exception as e:
             print(f"[!] Warning: Failed loading Keras model: {e}")
