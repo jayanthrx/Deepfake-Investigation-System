@@ -96,10 +96,15 @@ def generate_pytorch_gradcam(py_model, img_cv, cropped_face, target_layer=None):
         h2.remove()
 
 
+_cached_keras_grad_model = None
+_cached_for_model_id = None
+
+
 def generate_heatmap(model=None, img_path=None, processor=None, device_param=None, output_path=None):
     """
     Generates a Grad-CAM heatmap visualization highlighting manipulated regions.
     """
+    global _cached_keras_grad_model, _cached_for_model_id
     try:
         if img_path is None or not os.path.exists(img_path):
             return None
@@ -133,19 +138,24 @@ def generate_heatmap(model=None, img_path=None, processor=None, device_param=Non
                 img_array = np.expand_dims(resized_face.astype(np.float32), axis=0)
                 img_array = preprocess_input(img_array)
 
-                last_conv_layer = None
-                for layer in reversed(use_model.layers):
-                    if isinstance(layer, tf.keras.layers.Conv2D):
-                        last_conv_layer = layer
-                        break
+                # Use or build cached Grad Model
+                if _cached_keras_grad_model is None or _cached_for_model_id != id(use_model):
+                    last_conv_layer = None
+                    for layer in reversed(use_model.layers):
+                        if isinstance(layer, tf.keras.layers.Conv2D):
+                            last_conv_layer = layer
+                            break
 
-                if last_conv_layer:
-                    grad_model = tf.keras.models.Model(
-                        inputs=use_model.inputs,
-                        outputs=[last_conv_layer.output, use_model.output]
-                    )
+                    if last_conv_layer:
+                        _cached_keras_grad_model = tf.keras.models.Model(
+                            inputs=use_model.inputs,
+                            outputs=[last_conv_layer.output, use_model.output]
+                        )
+                        _cached_for_model_id = id(use_model)
+
+                if _cached_keras_grad_model:
                     with tf.GradientTape() as tape:
-                        conv_output, prediction = grad_model(img_array)
+                        conv_output, prediction = _cached_keras_grad_model(img_array)
                         loss = prediction[:, 0]
                     grads = tape.gradient(loss, conv_output)
                     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))

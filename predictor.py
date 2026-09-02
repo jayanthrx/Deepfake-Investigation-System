@@ -220,17 +220,30 @@ def extract_face(img_cv, padding_ratio=0.22):
     """
     Extracts the most prominent face with contextual padding to capture
     blending boundaries, jawlines, and facial perimeters.
+    Optimized for high-speed CPU execution.
     """
     if face_cascade is None or img_cv is None:
         return img_cv
 
     try:
-        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        img_h, img_w = img_cv.shape[:2]
+        # Downscale for ultra-fast face detection if image is large
+        scale = 1.0
+        max_dim = max(img_h, img_w)
+        if max_dim > 640:
+            scale = 640.0 / max_dim
+            small_w = int(img_w * scale)
+            small_h = int(img_h * scale)
+            small_img = cv2.resize(img_cv, (small_w, small_h), interpolation=cv2.INTER_AREA)
+        else:
+            small_img = img_cv
+
+        gray = cv2.cvtColor(small_img, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(
             gray,
-            scaleFactor=1.1,
-            minNeighbors=4,
-            minSize=(60, 60)
+            scaleFactor=1.15,
+            minNeighbors=3,
+            minSize=(30, 30)
         )
         if len(faces) == 0:
             return img_cv
@@ -238,10 +251,15 @@ def extract_face(img_cv, padding_ratio=0.22):
         largest_face = max(faces, key=lambda r: r[2] * r[3])
         x, y, w, h = largest_face
 
+        # Rescale bounding box to original dimensions
+        x = int(x / scale)
+        y = int(y / scale)
+        w = int(w / scale)
+        h = int(h / scale)
+
         pad_w = int(w * padding_ratio)
         pad_h = int(h * padding_ratio)
 
-        img_h, img_w = img_cv.shape[:2]
         x1 = max(0, x - pad_w)
         y1 = max(0, y - pad_h)
         x2 = min(img_w, x + w + pad_w)
