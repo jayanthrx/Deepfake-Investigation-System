@@ -9,7 +9,8 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
-from predictor import extract_face, eval_transform, device, class_to_idx, model as active_model, model_type
+import predictor
+from predictor import extract_face, eval_transform, device, class_to_idx
 
 
 def generate_pytorch_gradcam(py_model, img_cv, cropped_face, target_layer=None):
@@ -111,15 +112,16 @@ def generate_heatmap(model=None, img_path=None, processor=None, device_param=Non
         if cropped_face is None or cropped_face.size == 0:
             cropped_face = cv_img
 
-        use_model = model if model is not None else active_model
+        use_model = model if model is not None else predictor.model
+        m_type = predictor.model_type
         heatmap = None
 
         # Check if PyTorch model
-        if model_type == "pytorch" and use_model is not None:
+        if m_type == "pytorch" and use_model is not None:
             heatmap = generate_pytorch_gradcam(use_model, cv_img, cropped_face)
 
         # Fallback to Keras GradCAM
-        if heatmap is None and use_model is not None and model_type != "pytorch":
+        if heatmap is None and use_model is not None and m_type != "pytorch":
             try:
                 import tensorflow as tf
                 from tensorflow.keras.applications.efficientnet import preprocess_input
