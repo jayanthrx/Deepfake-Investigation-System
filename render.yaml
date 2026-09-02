@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python download_model.py && gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300"
+    startCommand: "python download_model.py && gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 300"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -12,4 +12,15 @@ services:
         value: "jayanthrx/deepfake-efficientnet"
       - key: FLASK_ENV
         value: production
+      - key: TF_ENABLE_ONEDNN_OPTS
+        value: "0"
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "3"
+      - key: CUDA_VISIBLE_DEVICES
+        value: "-1"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: "100000"
+
 

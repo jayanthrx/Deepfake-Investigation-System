@@ -1,16 +1,20 @@
 # predictor.py
-# High-Accuracy Deepfake Predictor with Dual-Stream Frequency Engine & PyTorch GPU Acceleration
+# High-Accuracy Deepfake Predictor with Dual-Stream Frequency Engine & Memory-Optimized Inference
 
 import os
 import sys
 import numpy as np
 import cv2
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision.transforms as transforms
 from PIL import Image
-import timm
+
+# Enforce low memory overhead for free-tier cloud containers (512MB limit)
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+os.environ["MALLOC_TRIM_THRESHOLD_"] = "100000"
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -25,119 +29,125 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PYTORCH_MODEL_PATH = os.path.join(BASE_DIR, "deepfake_detector_best.pt")
 KERAS_MODEL_PATH = os.path.join(BASE_DIR, "deepfake_efficientnet_v3.keras")
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+device = None
 model = None
 model_type = None
 class_to_idx = {"fake": 0, "real": 1}
 idx_to_class = {0: "fake", 1: "real"}
 IMG_SIZE = 224
+eval_transform = None
 
 
-def compute_highpass_residual(tensors):
+def compute_highpass_residual(tensors, torch_module):
     """
     Computes high-pass frequency residual map to extract compression artifacts.
     """
-    kernel = torch.tensor([
+    F = torch_module.nn.functional
+    kernel = torch_module.tensor([
         [1, 4, 6, 4, 1],
         [4, 16, 24, 16, 4],
         [6, 24, 36, 24, 6],
         [4, 16, 24, 16, 4],
         [1, 4, 6, 4, 1]
-    ], dtype=torch.float32, device=tensors.device) / 256.0
+    ], dtype=torch_module.float32, device=tensors.device) / 256.0
 
     kernel = kernel.repeat(3, 1, 1, 1)
     blurred = F.conv2d(tensors, kernel, padding=2, groups=3)
     return tensors - blurred
 
 
-class DualStreamDeepfakeDetector(nn.Module):
-    """
-    Dual-Stream network combining RGB Spatial Stream + High-Frequency Artifact Stream.
-    """
-    def __init__(self, backbone_name="efficientnet_b0", num_classes=2, drop_rate=0.40):
-        super().__init__()
-        self.rgb_backbone = timm.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
-        self.res_backbone = timm.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
+def get_dual_stream_classes(torch_mod, timm_mod):
+    nn = torch_mod.nn
+    F = torch_mod.nn.functional
 
-        num_features = self.rgb_backbone.num_features * 2
-        self.classifier = nn.Sequential(
-            nn.BatchNorm1d(num_features),
-            nn.Dropout(drop_rate),
-            nn.Linear(num_features, 256),
-            nn.GELU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(drop_rate),
-            nn.Linear(256, num_classes)
-        )
+    class DualStreamDeepfakeDetector(nn.Module):
+        def __init__(self, backbone_name="efficientnet_b0", num_classes=2, drop_rate=0.40):
+            super().__init__()
+            self.rgb_backbone = timm_mod.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
+            self.res_backbone = timm_mod.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
 
-    def forward(self, x):
-        res = compute_highpass_residual(x)
-        feat_rgb = self.rgb_backbone(x)
-        feat_res = self.res_backbone(res)
-        combined = torch.cat([feat_rgb, feat_res], dim=1)
-        return self.classifier(combined)
+            num_features = self.rgb_backbone.num_features * 2
+            self.classifier = nn.Sequential(
+                nn.BatchNorm1d(num_features),
+                nn.Dropout(drop_rate),
+                nn.Linear(num_features, 256),
+                nn.GELU(),
+                nn.BatchNorm1d(256),
+                nn.Dropout(drop_rate),
+                nn.Linear(256, num_classes)
+            )
 
+        def forward(self, x):
+            res = compute_highpass_residual(x, torch_mod)
+            feat_rgb = self.rgb_backbone(x)
+            feat_res = self.res_backbone(res)
+            combined = torch_mod.cat([feat_rgb, feat_res], dim=1)
+            return self.classifier(combined)
 
-class ForensicEnsembleDetector(nn.Module):
-    """
-    Dual-Model Ensemble with calibrated probabilistic fusion.
-    """
-    def __init__(self, model_a, model_b, weight_a=0.55, weight_b=0.45):
-        super().__init__()
-        self.model_a = model_a
-        self.model_b = model_b
-        self.weight_a = weight_a
-        self.weight_b = weight_b
+    class ForensicEnsembleDetector(nn.Module):
+        def __init__(self, model_a, model_b, weight_a=0.55, weight_b=0.45):
+            super().__init__()
+            self.model_a = model_a
+            self.model_b = model_b
+            self.weight_a = weight_a
+            self.weight_b = weight_b
 
-    def forward(self, x):
-        out_a = self.model_a(x)
-        out_b = self.model_b(x)
-        prob_a = F.softmax(out_a, dim=1)
-        prob_b = F.softmax(out_b, dim=1)
-        return self.weight_a * prob_a + self.weight_b * prob_b
+        def forward(self, x):
+            out_a = self.model_a(x)
+            out_b = self.model_b(x)
+            prob_a = F.softmax(out_a, dim=1)
+            prob_b = F.softmax(out_b, dim=1)
+            return self.weight_a * prob_a + self.weight_b * prob_b
 
-
-# Transform for PyTorch inference
-eval_transform = transforms.Compose([
-    transforms.Resize((IMG_SIZE, IMG_SIZE), Image.BICUBIC),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
+    return DualStreamDeepfakeDetector, ForensicEnsembleDetector
 
 
 def load_detector_model():
-    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE, eval_transform
+    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE, eval_transform, device
 
-    # 1. Try loading best PyTorch model
+    # 1. Try loading PyTorch model if .pt exists
     if os.path.exists(PYTORCH_MODEL_PATH):
         try:
             print(f"[*] Loading PyTorch Deepfake Detector: {PYTORCH_MODEL_PATH}")
+            import torch
+            import torchvision.transforms as transforms
+            import timm
+
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             checkpoint = torch.load(PYTORCH_MODEL_PATH, map_location=device)
             class_to_idx = checkpoint.get("class_to_idx", {"fake": 0, "real": 1})
             idx_to_class = {v: k for k, v in class_to_idx.items()}
             IMG_SIZE = checkpoint.get("img_size", 224)
 
+            eval_transform = transforms.Compose([
+                transforms.Resize((IMG_SIZE, IMG_SIZE), Image.BICUBIC),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+
+            DualStreamDetector, EnsembleDetector = get_dual_stream_classes(torch, timm)
+
             if checkpoint.get("is_ensemble"):
                 m_a_name = checkpoint.get("model_a_name", "efficientnet_b0")
                 m_b_name = checkpoint.get("model_b_name", "resnet34")
-                m_a = DualStreamDeepfakeDetector(backbone_name=m_a_name, num_classes=2)
-                m_b = DualStreamDeepfakeDetector(backbone_name=m_b_name, num_classes=2)
+                m_a = DualStreamDetector(backbone_name=m_a_name, num_classes=2)
+                m_b = DualStreamDetector(backbone_name=m_b_name, num_classes=2)
                 m_a.load_state_dict(checkpoint["model_a_state_dict"])
                 m_b.load_state_dict(checkpoint["model_b_state_dict"])
                 w_a = checkpoint.get("weight_a", 0.55)
                 w_b = checkpoint.get("weight_b", 0.45)
-                py_model = ForensicEnsembleDetector(m_a, m_b, weight_a=w_a, weight_b=w_b)
+                py_model = EnsembleDetector(m_a, m_b, weight_a=w_a, weight_b=w_b)
                 arch = f"Ensemble({m_a_name} + {m_b_name})"
             elif checkpoint.get("is_dual_stream"):
                 backbone = checkpoint.get("backbone", "efficientnet_b0")
-                py_model = DualStreamDeepfakeDetector(backbone_name=backbone, num_classes=2)
+                py_model = DualStreamDetector(backbone_name=backbone, num_classes=2)
                 py_model.load_state_dict(checkpoint["model_state_dict"])
                 arch = f"DualStream({backbone})"
             else:
                 arch = checkpoint.get("model_name", "efficientnet_b0")
                 py_model = timm.create_model(arch, pretrained=False, num_classes=2)
                 py_model.load_state_dict(checkpoint["model_state_dict"])
+                arch = f"Single({arch})"
 
             py_model.to(device)
             py_model.eval()
@@ -149,7 +159,7 @@ def load_detector_model():
         except Exception as e:
             print(f"[!] Warning: Failed loading PyTorch model: {e}")
 
-    # 2. Fallback to Keras model if available
+    # 2. Fallback to Keras model (load with compile=False and single-thread for memory safety)
     keras_candidates = [
         os.path.join(BASE_DIR, "deepfake_efficientnet_v3.keras"),
         os.path.join(BASE_DIR, "deepfake_efficientnet_v2.keras"),
@@ -159,11 +169,13 @@ def load_detector_model():
 
     if keras_path:
         try:
-            import tensorflow as tf
             print(f"[*] Loading Keras fallback model: {keras_path}")
-            model = tf.keras.models.load_model(keras_path)
+            import tensorflow as tf
+            tf.config.threading.set_inter_op_parallelism_threads(1)
+            tf.config.threading.set_intra_op_parallelism_threads(1)
+            model = tf.keras.models.load_model(keras_path, compile=False)
             model_type = "keras"
-            print("[+] Keras model loaded successfully")
+            print("[+] Keras model loaded successfully (lightweight inference mode)")
             return
         except Exception as e:
             print(f"[!] Warning: Failed loading Keras model: {e}")

@@ -1,11 +1,7 @@
-# gradcam.py
-# High-Accuracy Grad-CAM Heatmap Generator for PyTorch and Keras models
-
 import os
 import sys
 import numpy as np
 import cv2
-import torch
 from PIL import Image
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -20,6 +16,11 @@ def generate_pytorch_gradcam(py_model, img_cv, cropped_face, target_layer=None):
     """
     Generates Grad-CAM heatmap for a PyTorch convolutional / timm model.
     """
+    try:
+        import torch
+    except ImportError:
+        return None
+
     py_model.eval()
     
     # Identify target layer if not provided
@@ -114,11 +115,11 @@ def generate_heatmap(model=None, img_path=None, processor=None, device_param=Non
         heatmap = None
 
         # Check if PyTorch model
-        if isinstance(use_model, torch.nn.Module):
+        if model_type == "pytorch" and use_model is not None:
             heatmap = generate_pytorch_gradcam(use_model, cv_img, cropped_face)
 
         # Fallback to Keras GradCAM
-        if heatmap is None and use_model is not None and not isinstance(use_model, torch.nn.Module):
+        if heatmap is None and use_model is not None and model_type != "pytorch":
             try:
                 import tensorflow as tf
                 from tensorflow.keras.applications.efficientnet import preprocess_input
