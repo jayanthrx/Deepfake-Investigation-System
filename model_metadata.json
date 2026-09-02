@@ -1,0 +1,24 @@
+{
+  "model_name": "forensic_dual_stream_ensemble (efficientnet_b0 + resnet34)",
+  "is_ensemble": true,
+  "is_dual_stream": true,
+  "img_size": 224,
+  "class_to_idx": {
+    "fake": 0,
+    "real": 1
+  },
+  "idx_to_class": {
+    "0": "fake",
+    "1": "real"
+  },
+  "metrics": {
+    "test_accuracy": 78.95,
+    "real_accuracy": 84.68,
+    "fake_accuracy": 72.45,
+    "test_auc": 14.96,
+    "precision": 80.68,
+    "recall": 72.45,
+    "f1_score": 76.34
+  },
+  "trained_at": "2026-09-01 20:26:55"
+}

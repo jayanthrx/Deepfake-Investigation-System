@@ -241,23 +241,23 @@
             <div class="flow-grid">
                 <div class="flow-step">
                     <div class="step-num">STAGE 01</div>
-                    <div class="step-title">Media Ingestion</div>
-                    <div class="step-desc">Accepts high-resolution images or video files with security validation and MIME detection.</div>
+                    <div class="step-title">Media Ingestion & Face Extraction</div>
+                    <div class="step-desc">Accepts images/videos and applies multi-scale adaptive face cropping with boundary padding.</div>
                 </div>
                 <div class="flow-step">
                     <div class="step-num">STAGE 02</div>
-                    <div class="step-title">Face Landmark Cropping</div>
-                    <div class="step-desc">OpenCV Haar Cascades isolate and center facial regions to reduce background noise.</div>
+                    <div class="step-title">Dual-Stream Feature Extraction</div>
+                    <div class="step-desc">Parallel RGB Spatial stream and high-pass frequency residual stream to isolate synthetic blending lines.</div>
                 </div>
                 <div class="flow-step">
                     <div class="step-num">STAGE 03</div>
-                    <div class="step-title">EfficientNet Deep CNN</div>
-                    <div class="step-desc">Extracts deep hierarchical features and outputs sigmoid authenticity probability scores.</div>
+                    <div class="step-title">Forensic Ensemble Fusion</div>
+                    <div class="step-desc">Ensemble of EfficientNet-B0 + ResNet-34 with Test-Time Augmentation (TTA) and calibrated risk scoring.</div>
                 </div>
                 <div class="flow-step">
                     <div class="step-num">STAGE 04</div>
-                    <div class="step-title">Grad-CAM XAI Heatmap</div>
-                    <div class="step-desc">Backpropagates gradient activations to produce transparent visual heatmap overlays.</div>
+                    <div class="step-title">Grad-CAM XAI & PDF Report</div>
+                    <div class="step-desc">Computes activation gradients for explainable heatmaps and compiles forensic PDF investigation dossiers.</div>
                 </div>
             </div>
         </div>

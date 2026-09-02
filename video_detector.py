@@ -647,63 +647,27 @@ def detect_video(video_path):
     )
 
 
-    # ========================================================
-    # FINAL PREDICTION
-    # ========================================================
+    # Top-K / anomaly forensic aggregation
+    sorted_fake_probs = sorted(fake_probabilities, reverse=True)
+    top_k = min(5, len(sorted_fake_probs))
+    top_fake_avg = float(np.mean(sorted_fake_probs[:top_k])) if top_k > 0 else 0.0
 
-    if fake_count > real_count:
-
+    if fake_count > real_count or fake_percentage >= 18.0 or (fake_count >= 3 and top_fake_avg >= 68.0):
         final_prediction = "Fake"
-
-        final_confidence = (
-            average_fake_probability
-        )
-
-
+        final_confidence = max(average_fake_probability, top_fake_avg)
     elif real_count > fake_count:
-
         final_prediction = "Real"
-
-        final_confidence = (
-            average_real_probability
-        )
-
-
+        final_confidence = average_real_probability
     else:
-
-        # Equal number of fake and real frames
-
-        if (
-            average_fake_probability
-            >
-            average_real_probability
-        ):
-
+        if average_fake_probability > average_real_probability:
             final_prediction = "Fake"
-
-            final_confidence = (
-                average_fake_probability
-            )
-
-        elif (
-            average_real_probability
-            >
-            average_fake_probability
-        ):
-
+            final_confidence = average_fake_probability
+        elif average_real_probability > average_fake_probability:
             final_prediction = "Real"
-
-            final_confidence = (
-                average_real_probability
-            )
-
+            final_confidence = average_real_probability
         else:
-
             final_prediction = "Uncertain"
-
-            final_confidence = (
-                average_confidence
-            )
+            final_confidence = average_confidence
 
 
     # ========================================================

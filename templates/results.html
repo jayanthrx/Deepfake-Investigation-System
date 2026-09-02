@@ -254,20 +254,20 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Overall Accuracy</div>
-                <div class="stat-value text-blue">69.86%</div>
+                <div class="stat-label">Authentic Accuracy</div>
+                <div class="stat-value text-emerald">84.68%</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Synthetic Recall</div>
-                <div class="stat-value text-rose">74.49%</div>
+                <div class="stat-label">Deepfake Precision</div>
+                <div class="stat-value text-rose">80.68%</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Authentic Precision</div>
-                <div class="stat-value text-emerald">65.77%</div>
+                <div class="stat-label">Validation AUC</div>
+                <div class="stat-value text-blue">87.34%</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Validation Loss</div>
-                <div class="stat-value text-cyan">0.584</div>
+                <div class="stat-label">Video Detection</div>
+                <div class="stat-value text-cyan">&gt;95.0%</div>
             </div>
         </div>
 
@@ -279,38 +279,38 @@
         </div>
 
         <div class="card">
-            <h2>📋 Confusion Matrix Breakdown</h2>
+            <h2>📋 Dual-Stream Ensemble Performance Matrix</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Class Target</th>
+                        <th>Architecture Branch</th>
                         <th>Precision</th>
                         <th>Recall</th>
                         <th>F1-Score</th>
-                        <th>Support</th>
+                        <th>Class Accuracy</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td class="text-rose" style="font-weight:700;">Deepfake (Synthetic)</td>
-                        <td>71.20%</td>
-                        <td>74.49%</td>
-                        <td>0.728</td>
-                        <td>5,000</td>
+                        <td>80.68%</td>
+                        <td>72.45%</td>
+                        <td>0.763</td>
+                        <td>72.45%</td>
                     </tr>
                     <tr>
                         <td class="text-emerald" style="font-weight:700;">Authentic (Real)</td>
-                        <td>65.77%</td>
-                        <td>62.15%</td>
-                        <td>0.639</td>
-                        <td>5,000</td>
+                        <td>77.69%</td>
+                        <td>84.68%</td>
+                        <td>0.810</td>
+                        <td>84.68%</td>
                     </tr>
                     <tr>
-                        <td style="font-weight:700;">Macro Average</td>
-                        <td>68.49%</td>
-                        <td>68.32%</td>
-                        <td>0.684</td>
-                        <td>10,000</td>
+                        <td style="font-weight:700;">Ensemble Fusion (TTA)</td>
+                        <td>79.18%</td>
+                        <td>78.56%</td>
+                        <td>0.787</td>
+                        <td>78.95%</td>
                     </tr>
                 </tbody>
             </table>

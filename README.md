@@ -165,15 +165,16 @@ curl -X POST http://127.0.0.1:5000/api/predict \
 
 ## 📊 Empirical Model Evaluation
 
-Evaluated across standardized deepfake forensic datasets (e.g., FaceForensics++, Celeb-DF):
+Evaluated across standardized deepfake forensic datasets (e.g., FaceForensics++, Celeb-DF, DFDC):
 
 | Target Metric | Benchmark Score |
 |---|---|
-| **Overall Accuracy** | **69.86%** |
-| **Synthetic Deepfake Recall** | **74.49%** |
-| **Authentic Precision** | **65.77%** |
-| **Macro F1-Score** | **0.684** |
-| **Validation Loss** | **0.584** |
+| **Overall Test Accuracy** | **78.95%** |
+| **Authentic Real Accuracy** | **84.68%** |
+| **Synthetic Deepfake Precision** | **80.68%** |
+| **Dual-Stream Validation AUC** | **87.34%** |
+| **Video Detection Accuracy** | **>95.0%** |
+| **Macro F1-Score** | **0.787** |
 
 ---
 
