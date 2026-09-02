@@ -88,18 +88,18 @@ def detect_video(video_path):
     # OPEN VIDEO
     # ========================================================
 
-    cap = cv2.VideoCapture(
-        video_path
-    )
-
+    cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
-
-        print(
-            "ERROR: Could not open video."
-        )
-
+        print("ERROR: Could not open video.")
         return empty_result()
+
+    total_video_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
+    MAX_FRAMES_TO_ANALYZE = 12
+    if total_video_frames > MAX_FRAMES_TO_ANALYZE:
+        step = max(1, total_video_frames // MAX_FRAMES_TO_ANALYZE)
+    else:
+        step = max(1, SAMPLE_EVERY)
 
 
     # ========================================================
@@ -107,21 +107,14 @@ def detect_video(video_path):
     # ========================================================
 
     predictions = []
-
     fake_probabilities = []
-
     real_probabilities = []
-
     confidences = []
 
-
     fake_count = 0
-
     real_count = 0
-
     uncertain_count = 0
-
-
+    analyzed_count = 0
     frame_count = 0
 
 
@@ -130,24 +123,15 @@ def detect_video(video_path):
     # ========================================================
 
     while True:
-
         ret, frame = cap.read()
-
-
-        if not ret:
+        if not ret or analyzed_count >= MAX_FRAMES_TO_ANALYZE:
             break
 
-
         frame_count += 1
-
-
-        # ====================================================
-        # ANALYZE EVERY 10TH FRAME
-        # ====================================================
-
-        if frame_count % SAMPLE_EVERY != 0:
-
+        if frame_count % step != 0:
             continue
+
+        analyzed_count += 1
 
 
         # ====================================================
@@ -155,9 +139,7 @@ def detect_video(video_path):
         # ====================================================
 
         temp_frame = os.path.join(
-
             TEMP_FOLDER,
-
             f"_video_frame_{frame_count}.jpg"
         )
 
