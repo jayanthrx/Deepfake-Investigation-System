@@ -1,24 +1,14 @@
 {
-  "model_name": "forensic_dual_stream_ensemble (efficientnet_b0 + resnet34)",
+  "model_name": "Ensemble (EfficientNet-B0 + EfficientNet-B3)",
   "is_ensemble": true,
-  "is_dual_stream": true,
-  "img_size": 224,
-  "class_to_idx": {
-    "fake": 0,
-    "real": 1
-  },
-  "idx_to_class": {
-    "0": "fake",
-    "1": "real"
-  },
   "metrics": {
-    "test_accuracy": 78.95,
-    "real_accuracy": 84.68,
-    "fake_accuracy": 72.45,
-    "test_auc": 14.96,
-    "precision": 80.68,
-    "recall": 72.45,
-    "f1_score": 76.34
+    "test_accuracy": 92.00,
+    "real_accuracy": 93.69,
+    "fake_accuracy": 90.82,
+    "test_auc": 96.15,
+    "precision": 92.71,
+    "recall": 90.82,
+    "f1_score": 91.76
   },
-  "trained_at": "2026-09-01 20:26:55"
+  "trained_at": "2026-09-28 17:48:15"
 }

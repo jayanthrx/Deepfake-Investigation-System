@@ -2002,6 +2002,32 @@ def download(filename):
     )
 
 
+def get_model_metrics():
+    metadata_path = os.path.join(BASE_DIR, "model_metadata.json")
+    metrics = {
+        "model_name": "Ensemble (EfficientNet-B0 + EfficientNet-B3)",
+        "test_accuracy": 92.00,
+        "real_accuracy": 93.69,
+        "fake_accuracy": 90.82,
+        "test_auc": 96.15,
+        "precision": 92.71,
+        "recall": 90.82,
+        "f1_score": 91.76,
+    }
+    if os.path.exists(metadata_path):
+        try:
+            import json as _json
+            with open(metadata_path, "r") as f:
+                data = _json.load(f)
+                if "metrics" in data:
+                    metrics.update(data["metrics"])
+                if "model_name" in data:
+                    metrics["model_name"] = data["model_name"]
+        except Exception as me:
+            print("Error loading model metadata:", me)
+    return metrics
+
+
 # ============================================================
 # ABOUT
 # ============================================================
@@ -2010,7 +2036,8 @@ def download(filename):
 def about():
 
     return render_template(
-        "about.html"
+        "about.html",
+        metrics=get_model_metrics()
     )
 
 
@@ -2032,9 +2059,9 @@ def architecture():
 
 @app.route("/results")
 def results():
-
     return render_template(
-        "results.html"
+        "results.html",
+        metrics=get_model_metrics()
     )
 
 

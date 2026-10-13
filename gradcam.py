@@ -123,7 +123,8 @@ def generate_heatmap(model=None, img_path=None, processor=None, device_param=Non
 
         # Check if PyTorch model
         if m_type == "pytorch" and use_model is not None:
-            heatmap = generate_pytorch_gradcam(use_model, cv_img, cropped_face)
+            target_m = getattr(use_model, "model_b0", use_model)
+            heatmap = generate_pytorch_gradcam(target_m, cv_img, cropped_face)
 
         # Fallback to Keras GradCAM
         if heatmap is None and use_model is not None and m_type != "pytorch":

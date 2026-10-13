@@ -137,3 +137,5 @@ Thumbs.db
 
 # Nested development repository
 DeepFake-Detect/
+Deepfake-investigation-system/
+pyrightconfig.json

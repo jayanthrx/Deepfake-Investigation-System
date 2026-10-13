@@ -1,5 +1,5 @@
 # predictor.py
-# High-Accuracy Deepfake Predictor with Dual-Stream Frequency Engine & Memory-Optimized Inference
+# High-Accuracy Deepfake Predictor with Multi-Scale Forensic Concat-Pooling Ensemble
 
 import os
 import sys
@@ -7,14 +7,10 @@ import numpy as np
 import cv2
 from PIL import Image
 
-# Enforce low memory overhead for free-tier cloud containers (512MB limit)
+# Offline mode to prevent hanging on huggingface hub
+os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
-os.environ["TF_NUM_INTEROP_THREADS"] = "1"
-os.environ["MALLOC_TRIM_THRESHOLD_"] = "100000"
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -22,7 +18,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 # ==============================
-# CONFIGURATION & MODEL DEFINITION
+# CONFIGURATION & PATHS
 # ==============================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,83 +34,93 @@ class_to_idx = {"fake": 0, "real": 1}
 idx_to_class = {0: "fake", 1: "real"}
 IMG_SIZE = 224
 eval_transform = None
+eval_transform_b0 = None
+eval_transform_b3 = None
+is_ensemble_model = False
 
 
-def compute_highpass_residual(tensors, torch_module):
-    """
-    Computes high-pass frequency residual map to extract compression artifacts.
-    """
-    F = torch_module.nn.functional
-    kernel = torch_module.tensor([
-        [1, 4, 6, 4, 1],
-        [4, 16, 24, 16, 4],
-        [6, 24, 36, 24, 6],
-        [4, 16, 24, 16, 4],
-        [1, 4, 6, 4, 1]
-    ], dtype=torch_module.float32, device=tensors.device) / 256.0
+# ==============================
+# MODEL ARCHITECTURES
+# ==============================
 
-    kernel = kernel.repeat(3, 1, 1, 1)
-    blurred = F.conv2d(tensors, kernel, padding=2, groups=3)
-    return tensors - blurred
-
-
-def get_dual_stream_classes(torch_mod, timm_mod):
+def get_forensic_classes(torch_mod, timm_mod):
     nn = torch_mod.nn
-    F = torch_mod.nn.functional
 
-    class DualStreamDeepfakeDetector(nn.Module):
-        def __init__(self, backbone_name="efficientnet_b0", num_classes=2, drop_rate=0.40):
+    class ForensicHead(nn.Module):
+        def __init__(self, in_features, num_classes=2, drop_rate=0.35):
             super().__init__()
-            self.rgb_backbone = timm_mod.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
-            self.res_backbone = timm_mod.create_model(backbone_name, pretrained=False, num_classes=0, drop_rate=drop_rate)
-
-            num_features = self.rgb_backbone.num_features * 2
-            self.classifier = nn.Sequential(
-                nn.BatchNorm1d(num_features),
+            self.avg_pool = nn.AdaptiveAvgPool2d(1)
+            self.max_pool = nn.AdaptiveMaxPool2d(1)
+            feat_dim = in_features * 2
+            self.fc = nn.Sequential(
+                nn.BatchNorm1d(feat_dim),
                 nn.Dropout(drop_rate),
-                nn.Linear(num_features, 256),
+                nn.Linear(feat_dim, 512),
                 nn.GELU(),
-                nn.BatchNorm1d(256),
-                nn.Dropout(drop_rate),
-                nn.Linear(256, num_classes)
+                nn.BatchNorm1d(512),
+                nn.Dropout(drop_rate * 0.75),
+                nn.Linear(512, num_classes)
             )
 
         def forward(self, x):
-            res = compute_highpass_residual(x, torch_mod)
-            feat_rgb = self.rgb_backbone(x)
-            feat_res = self.res_backbone(res)
-            combined = torch_mod.cat([feat_rgb, feat_res], dim=1)
-            return self.classifier(combined)
+            avg_f = self.avg_pool(x).flatten(1)
+            max_f = self.max_pool(x).flatten(1)
+            combined = torch_mod.cat([avg_f, max_f], dim=1)
+            return self.fc(combined)
 
-    class ForensicEnsembleDetector(nn.Module):
-        def __init__(self, model_a, model_b, weight_a=0.55, weight_b=0.45):
+    class DeepfakeClassifier(nn.Module):
+        def __init__(self, backbone_name="efficientnet_b0", pretrained=False, drop_rate=0.35):
             super().__init__()
-            self.model_a = model_a
-            self.model_b = model_b
-            self.weight_a = weight_a
-            self.weight_b = weight_b
+            self.backbone_name = backbone_name
+            self.backbone = timm_mod.create_model(backbone_name, pretrained=pretrained, num_classes=0, drop_rate=drop_rate)
+            in_features = self.backbone.num_features
+            self.head = ForensicHead(in_features, num_classes=2, drop_rate=drop_rate)
 
         def forward(self, x):
-            out_a = self.model_a(x)
-            out_b = self.model_b(x)
-            prob_a = F.softmax(out_a, dim=1)
-            prob_b = F.softmax(out_b, dim=1)
-            return self.weight_a * prob_a + self.weight_b * prob_b
+            feat = self.backbone.forward_features(x)
+            return self.head(feat)
 
-    return DualStreamDeepfakeDetector, ForensicEnsembleDetector
+        @property
+        def conv_head(self):
+            if hasattr(self.backbone, "conv_head"):
+                return self.backbone.conv_head
+            elif hasattr(self.backbone, "head") and hasattr(self.backbone.head, "conv"):
+                return self.backbone.head.conv
+            elif hasattr(self.backbone, "blocks"):
+                return self.backbone.blocks[-1]
+            return None
+
+    class EnsembleForensicDetector(nn.Module):
+        def __init__(self, model_b0, model_b3, weight_b0=0.40, weight_b3=0.60):
+            super().__init__()
+            self.model_b0 = model_b0
+            self.model_b3 = model_b3
+            self.weight_b0 = weight_b0
+            self.weight_b3 = weight_b3
+
+        def forward(self, x_b0, x_b3=None):
+            if x_b3 is None:
+                x_b3 = x_b0
+            prob_b0 = torch_mod.softmax(self.model_b0(x_b0), dim=1)
+            prob_b3 = torch_mod.softmax(self.model_b3(x_b3), dim=1)
+            return self.weight_b0 * prob_b0 + self.weight_b3 * prob_b3
+
+        @property
+        def conv_head(self):
+            return self.model_b0.conv_head
+
+    return ForensicHead, DeepfakeClassifier, EnsembleForensicDetector
 
 
-DualStreamDetector = None
-EnsembleDetector = None
-ForensicEnsembleDetector = None
-DualStreamDeepfakeDetector = None
-
+# ==============================
+# MODEL LOADER
+# ==============================
 
 def load_detector_model():
-    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE, eval_transform, device, torch, tf
-    global DualStreamDetector, EnsembleDetector, ForensicEnsembleDetector, DualStreamDeepfakeDetector
+    global model, model_type, class_to_idx, idx_to_class, IMG_SIZE
+    global eval_transform, eval_transform_b0, eval_transform_b3, is_ensemble_model
+    global device, torch, tf
 
-    # 1. Try loading PyTorch model if .pt exists
     if os.path.exists(PYTORCH_MODEL_PATH):
         try:
             print(f"[*] Loading PyTorch Deepfake Detector: {PYTORCH_MODEL_PATH}")
@@ -125,41 +131,42 @@ def load_detector_model():
             torch = _torch
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             checkpoint = torch.load(PYTORCH_MODEL_PATH, map_location=device)
+
             class_to_idx = checkpoint.get("class_to_idx", {"fake": 0, "real": 1})
             idx_to_class = {v: k for k, v in class_to_idx.items()}
-            IMG_SIZE = checkpoint.get("img_size", 224)
 
-            eval_transform = transforms.Compose([
-                transforms.Resize((IMG_SIZE, IMG_SIZE), Image.BICUBIC),
+            norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            eval_transform_b0 = transforms.Compose([
+                transforms.Resize((224, 224), Image.BICUBIC),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                norm
             ])
+            eval_transform_b3 = transforms.Compose([
+                transforms.Resize((288, 288), Image.BICUBIC),
+                transforms.ToTensor(),
+                norm
+            ])
+            eval_transform = eval_transform_b0
+            IMG_SIZE = 224
 
-            DualStreamDetector, EnsembleDetector = get_dual_stream_classes(torch, timm)
-            DualStreamDeepfakeDetector = DualStreamDetector
-            ForensicEnsembleDetector = EnsembleDetector
+            ForensicHead, DeepfakeClassifier, EnsembleForensicDetector = get_forensic_classes(torch, timm)
 
             if checkpoint.get("is_ensemble"):
-                m_a_name = checkpoint.get("model_a_name", "efficientnet_b0")
-                m_b_name = checkpoint.get("model_b_name", "resnet34")
-                m_a = DualStreamDetector(backbone_name=m_a_name, num_classes=2)
-                m_b = DualStreamDetector(backbone_name=m_b_name, num_classes=2)
-                m_a.load_state_dict(checkpoint["model_a_state_dict"])
-                m_b.load_state_dict(checkpoint["model_b_state_dict"])
-                w_a = checkpoint.get("weight_a", 0.55)
-                w_b = checkpoint.get("weight_b", 0.45)
-                py_model = EnsembleDetector(m_a, m_b, weight_a=w_a, weight_b=w_b)
-                arch = f"Ensemble({m_a_name} + {m_b_name})"
-            elif checkpoint.get("is_dual_stream"):
-                backbone = checkpoint.get("backbone", "efficientnet_b0")
-                py_model = DualStreamDetector(backbone_name=backbone, num_classes=2)
-                py_model.load_state_dict(checkpoint["model_state_dict"])
-                arch = f"DualStream({backbone})"
+                is_ensemble_model = True
+                m_b0 = DeepfakeClassifier("efficientnet_b0", pretrained=False)
+                m_b3 = DeepfakeClassifier("efficientnet_b3", pretrained=False)
+                m_b0.load_state_dict(checkpoint["model_b0_state_dict"])
+                m_b3.load_state_dict(checkpoint["model_b3_state_dict"])
+                w0 = checkpoint.get("weight_b0", 0.40)
+                w3 = checkpoint.get("weight_b3", 0.60)
+                py_model = EnsembleForensicDetector(m_b0, m_b3, weight_b0=w0, weight_b3=w3)
+                arch = f"Ensemble(EfficientNet-B0 [{w0}] + EfficientNet-B3 [{w3}])"
             else:
-                arch = checkpoint.get("model_name", "efficientnet_b0")
-                py_model = timm.create_model(arch, pretrained=False, num_classes=2)
+                is_ensemble_model = False
+                backbone = checkpoint.get("backbone_name", "efficientnet_b0")
+                py_model = DeepfakeClassifier(backbone, pretrained=False)
                 py_model.load_state_dict(checkpoint["model_state_dict"])
-                arch = f"Single({arch})"
+                arch = f"Single({backbone})"
 
             py_model.to(device)
             py_model.eval()
@@ -171,7 +178,7 @@ def load_detector_model():
         except Exception as e:
             print(f"[!] Warning: Failed loading PyTorch model: {e}")
 
-    # 2. Fallback to Keras model (load with compile=False and single-thread for memory safety)
+    # Fallback to Keras model
     keras_candidates = [
         os.path.join(BASE_DIR, "deepfake_efficientnet_v3.keras"),
         os.path.join(BASE_DIR, "deepfake_efficientnet_v2.keras"),
@@ -182,7 +189,8 @@ def load_detector_model():
     if keras_path:
         try:
             print(f"[*] Loading Keras fallback model: {keras_path}")
-            import tensorflow as tf
+            import tensorflow as _tf
+            tf = _tf
             tf.config.threading.set_inter_op_parallelism_threads(1)
             tf.config.threading.set_intra_op_parallelism_threads(1)
             model = tf.keras.models.load_model(keras_path, compile=False)
@@ -198,6 +206,7 @@ def load_detector_model():
             print(f"[!] Warning: Failed loading Keras model: {e}")
 
     print("[!] ERROR: No deepfake detector weights found!")
+
 
 load_detector_model()
 
@@ -220,14 +229,12 @@ def extract_face(img_cv, padding_ratio=0.22):
     """
     Extracts the most prominent face with contextual padding to capture
     blending boundaries, jawlines, and facial perimeters.
-    Optimized for high-speed CPU execution.
     """
     if face_cascade is None or img_cv is None:
         return img_cv
 
     try:
         img_h, img_w = img_cv.shape[:2]
-        # Downscale for ultra-fast face detection if image is large
         scale = 1.0
         max_dim = max(img_h, img_w)
         if max_dim > 640:
@@ -251,7 +258,6 @@ def extract_face(img_cv, padding_ratio=0.22):
         largest_face = max(faces, key=lambda r: r[2] * r[3])
         x, y, w, h = largest_face
 
-        # Rescale bounding box to original dimensions
         x = int(x / scale)
         y = int(y / scale)
         w = int(w / scale)
@@ -332,26 +338,41 @@ def predict_image(image_path, use_tta=True):
     # ----------------------------------------------------
     if model_type == "pytorch":
         try:
-            tensor_orig = eval_transform(pil_img)
-            
-            if use_tta:
-                tensor_flip = torch.flip(tensor_orig, dims=[-1])
-                batch = torch.stack([tensor_orig, tensor_flip]).to(device)
-            else:
-                batch = tensor_orig.unsqueeze(0).to(device)
-
             with torch.no_grad():
-                outputs = model(batch)
-                if isinstance(model, ForensicEnsembleDetector):
-                    probs = outputs.mean(dim=0)
+                if is_ensemble_model:
+                    # Multi-scale evaluation for ensemble
+                    t_b0_orig = eval_transform_b0(pil_img)
+                    t_b3_orig = eval_transform_b3(pil_img)
+
+                    if use_tta:
+                        t_b0_flip = torch.flip(t_b0_orig, dims=[-1])
+                        t_b3_flip = torch.flip(t_b3_orig, dims=[-1])
+                        b0_batch = torch.stack([t_b0_orig, t_b0_flip]).to(device)
+                        b3_batch = torch.stack([t_b3_orig, t_b3_flip]).to(device)
+                    else:
+                        b0_batch = t_b0_orig.unsqueeze(0).to(device)
+                        b3_batch = t_b3_orig.unsqueeze(0).to(device)
+
+                    with torch.amp.autocast("cuda", enabled=(device.type == "cuda")):
+                        probs = model(b0_batch, b3_batch).mean(dim=0)
+
                 else:
-                    probs = torch.softmax(outputs, dim=1).mean(dim=0)
+                    tensor_orig = eval_transform(pil_img)
+                    if use_tta:
+                        tensor_flip = torch.flip(tensor_orig, dims=[-1])
+                        batch = torch.stack([tensor_orig, tensor_flip]).to(device)
+                    else:
+                        batch = tensor_orig.unsqueeze(0).to(device)
 
-            real_idx = class_to_idx.get("real", 1)
+                    with torch.amp.autocast("cuda", enabled=(device.type == "cuda")):
+                        out = model(batch)
+                    probs = torch.softmax(out, dim=1).mean(dim=0)
+
             fake_idx = class_to_idx.get("fake", 0)
+            real_idx = class_to_idx.get("real", 1)
 
-            real_probability = float(probs[real_idx].item() * 100.0)
             fake_probability = float(probs[fake_idx].item() * 100.0)
+            real_probability = float(probs[real_idx].item() * 100.0)
 
         except Exception as e:
             print("PyTorch Inference Error:", e)
@@ -377,15 +398,12 @@ def predict_image(image_path, use_tta=True):
     # ==============================
     # CALIBRATED DECISION LOGIC
     # ==============================
-    if fake_probability >= 52.0:
+    if fake_probability >= 50.0:
         label = "Fake"
         confidence = fake_probability
-    elif real_probability >= 52.0:
+    else:
         label = "Real"
         confidence = real_probability
-    else:
-        label = "Uncertain"
-        confidence = max(fake_probability, real_probability)
 
     confidence = round(float(confidence), 2)
     fake_probability = round(float(fake_probability), 2)

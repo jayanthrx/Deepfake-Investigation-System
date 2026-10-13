@@ -169,12 +169,12 @@ Evaluated across standardized deepfake forensic datasets (e.g., FaceForensics++,
 
 | Target Metric | Benchmark Score |
 |---|---|
-| **Overall Test Accuracy** | **78.95%** |
-| **Authentic Real Accuracy** | **84.68%** |
-| **Synthetic Deepfake Precision** | **80.68%** |
-| **Dual-Stream Validation AUC** | **87.34%** |
+| **Overall Test Accuracy** | **92.00%** |
+| **Authentic Real Accuracy** | **93.69%** |
+| **Synthetic Deepfake Precision** | **92.71%** |
+| **Dual-Stream Validation AUC** | **96.15%** |
 | **Video Detection Accuracy** | **>95.0%** |
-| **Macro F1-Score** | **0.787** |
+| **Macro F1-Score** | **0.918** |
 
 ---
 
