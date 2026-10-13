@@ -133,6 +133,30 @@ class TestDeepfakeInvestigationSystem(unittest.TestCase):
         self.assertIn("ID,Filename,Prediction,Confidence (%),Risk Level,Date Analyzed", content)
         print("  [PASS] 08 - CSV Case History Export verified")
 
+    def test_09_sample_videos_download_and_api(self):
+        """Test sample videos API, individual download, and ZIP bundle download"""
+        from app import app
+        client = app.test_client()
+
+        # 1. API catalog endpoint
+        api_res = client.get("/api/sample_videos")
+        self.assertEqual(api_res.status_code, 200)
+        api_data = api_res.get_json()
+        self.assertTrue(api_data.get("success"))
+        self.assertGreaterEqual(api_data.get("total", 0), 2)
+
+        # 2. Individual video download
+        dl_res = client.get("/download_sample/real_sample_1_authentic_speaker.mp4")
+        self.assertEqual(dl_res.status_code, 200)
+        self.assertGreater(len(dl_res.data), 1_000_000)
+
+        # 3. All samples ZIP download
+        zip_res = client.get("/download_all_samples")
+        self.assertEqual(zip_res.status_code, 200)
+        self.assertEqual(zip_res.mimetype, "application/zip")
+        self.assertGreater(len(zip_res.data), 5_000_000)
+        print("  [PASS] 09 - Sample Videos Catalog & Multi-Format Download verified")
+
 
 if __name__ == "__main__":
     print("\n" + "=" * 70)

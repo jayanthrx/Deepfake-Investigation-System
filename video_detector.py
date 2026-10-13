@@ -634,7 +634,7 @@ def detect_video(video_path):
     top_k = min(5, len(sorted_fake_probs))
     top_fake_avg = float(np.mean(sorted_fake_probs[:top_k])) if top_k > 0 else 0.0
 
-    if fake_count > real_count or fake_percentage >= 18.0 or (fake_count >= 3 and top_fake_avg >= 68.0):
+    if fake_count > real_count or (fake_percentage >= 40.0 and top_fake_avg >= 65.0) or (top_fake_avg >= 75.0 and fake_count >= 3):
         final_prediction = "Fake"
         final_confidence = max(average_fake_probability, top_fake_avg)
     elif real_count > fake_count:

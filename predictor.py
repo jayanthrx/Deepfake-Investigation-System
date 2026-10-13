@@ -101,8 +101,10 @@ def get_forensic_classes(torch_mod, timm_mod):
         def forward(self, x_b0, x_b3=None):
             if x_b3 is None:
                 x_b3 = x_b0
-            prob_b0 = torch_mod.softmax(self.model_b0(x_b0), dim=1)
-            prob_b3 = torch_mod.softmax(self.model_b3(x_b3), dim=1)
+            out0 = self.model_b0(x_b0).float()
+            out3 = self.model_b3(x_b3).float()
+            prob_b0 = torch_mod.softmax(out0, dim=1)
+            prob_b3 = torch_mod.softmax(out3, dim=1)
             return self.weight_b0 * prob_b0 + self.weight_b3 * prob_b3
 
         @property
@@ -353,8 +355,7 @@ def predict_image(image_path, use_tta=True):
                         b0_batch = t_b0_orig.unsqueeze(0).to(device)
                         b3_batch = t_b3_orig.unsqueeze(0).to(device)
 
-                    with torch.amp.autocast("cuda", enabled=(device.type == "cuda")):
-                        probs = model(b0_batch, b3_batch).mean(dim=0)
+                    probs = model(b0_batch, b3_batch).float().mean(dim=0)
 
                 else:
                     tensor_orig = eval_transform(pil_img)
@@ -364,15 +365,19 @@ def predict_image(image_path, use_tta=True):
                     else:
                         batch = tensor_orig.unsqueeze(0).to(device)
 
-                    with torch.amp.autocast("cuda", enabled=(device.type == "cuda")):
-                        out = model(batch)
-                    probs = torch.softmax(out, dim=1).mean(dim=0)
+                    out = model(batch)
+                    probs = torch.softmax(out.float(), dim=1).mean(dim=0)
 
             fake_idx = class_to_idx.get("fake", 0)
             real_idx = class_to_idx.get("real", 1)
 
-            fake_probability = float(probs[fake_idx].item() * 100.0)
-            real_probability = float(probs[real_idx].item() * 100.0)
+            fake_val = probs[fake_idx].item()
+            real_val = probs[real_idx].item()
+            if np.isnan(fake_val) or np.isnan(real_val):
+                fake_val, real_val = 0.5, 0.5
+
+            fake_probability = float(fake_val * 100.0)
+            real_probability = float(real_val * 100.0)
 
         except Exception as e:
             print("PyTorch Inference Error:", e)

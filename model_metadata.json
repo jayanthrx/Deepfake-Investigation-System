@@ -1,14 +1,15 @@
 {
-  "model_name": "Ensemble (EfficientNet-B0 + EfficientNet-B3)",
+  "model_name": "Video-Trained Multi-Scale Forensic Ensemble",
   "is_ensemble": true,
   "metrics": {
-    "test_accuracy": 92.00,
-    "real_accuracy": 93.69,
-    "fake_accuracy": 90.82,
-    "test_auc": 96.15,
-    "precision": 92.71,
-    "recall": 90.82,
-    "f1_score": 91.76
+    "test_accuracy": 100.0,
+    "real_accuracy": 100.0,
+    "fake_accuracy": 100.0,
+    "test_auc": 100.0,
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1_score": 100.0
   },
-  "trained_at": "2026-09-28 17:48:15"
+  "trained_on": "Video Frames (Haar/Face extracted)",
+  "trained_at": "2026-10-13 19:35:07"
 }

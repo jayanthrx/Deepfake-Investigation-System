@@ -20,6 +20,8 @@ import sys
 import uuid
 import csv
 import io
+import shutil
+import zipfile
 from datetime import datetime
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -109,6 +111,11 @@ REPORT_FOLDER = os.path.join(
     "reports"
 )
 
+SAMPLE_VIDEOS_FOLDER = os.path.join(
+    BASE_DIR,
+    "sample_videos"
+)
+
 
 # ============================================================
 # CREATE FOLDERS
@@ -136,6 +143,11 @@ os.makedirs(
 
 os.makedirs(
     REPORT_FOLDER,
+    exist_ok=True
+)
+
+os.makedirs(
+    SAMPLE_VIDEOS_FOLDER,
     exist_ok=True
 )
 
@@ -375,15 +387,362 @@ def get_risk(
 
 
 # ============================================================
+# SAMPLE VIDEOS BENCHMARK CATALOG
+# ============================================================
+
+def get_sample_videos_catalog():
+    catalog = [
+        {
+            "id": "real_1",
+            "filename": "real_sample_1_authentic_speaker.mp4",
+            "title": "Authentic Interview (Real Speaker)",
+            "name": "Authentic Interview (Real Speaker)",
+            "category": "real",
+            "type": "Real",
+            "badge_class": "sample-badge-real",
+            "badge_color": "emerald",
+            "duration": "10s",
+            "size": "5.0 MB",
+            "size_mb": 5.0,
+            "download_url": "/download_sample/real_sample_1_authentic_speaker.mp4",
+            "run_url": "/run_sample/real_sample_1_authentic_speaker.mp4",
+            "description": "Verified authentic human speaker with natural eye micro-movements, facial kinematics, and organic illumination."
+        },
+        {
+            "id": "real_2",
+            "filename": "real_sample_2_conversational_face.mp4",
+            "title": "Natural Conversational Portrait",
+            "name": "Natural Conversational Portrait",
+            "category": "real",
+            "type": "Real",
+            "badge_class": "sample-badge-real",
+            "badge_color": "emerald",
+            "duration": "10s",
+            "size": "5.0 MB",
+            "size_mb": 5.0,
+            "download_url": "/download_sample/real_sample_2_conversational_face.mp4",
+            "run_url": "/run_sample/real_sample_2_conversational_face.mp4",
+            "description": "Ground-truth authentic subject with natural spontaneous speech and zero digital neural manipulation."
+        },
+        {
+            "id": "fake_1",
+            "filename": "fake_sample_1_neural_faceswap.mp4",
+            "title": "Neural Face-Swap Deepfake",
+            "name": "Neural Face-Swap Deepfake",
+            "category": "fake",
+            "type": "Fake",
+            "badge_class": "sample-badge-fake",
+            "badge_color": "rose",
+            "duration": "10s",
+            "size": "10.9 MB",
+            "size_mb": 10.9,
+            "download_url": "/download_sample/fake_sample_1_neural_faceswap.mp4",
+            "run_url": "/run_sample/fake_sample_1_neural_faceswap.mp4",
+            "description": "High-resolution identity face-swap with boundary warp blending artifacts and subtle facial jitter."
+        },
+        {
+            "id": "fake_2",
+            "filename": "fake_sample_2_expression_manipulation.mp4",
+            "title": "Expression Reenactment Deepfake",
+            "name": "Expression Reenactment Deepfake",
+            "category": "fake",
+            "type": "Fake",
+            "badge_class": "sample-badge-fake",
+            "badge_color": "rose",
+            "duration": "10s",
+            "size": "4.5 MB",
+            "size_mb": 4.5,
+            "download_url": "/download_sample/fake_sample_2_expression_manipulation.mp4",
+            "run_url": "/run_sample/fake_sample_2_expression_manipulation.mp4",
+            "description": "Target facial expression driven by source actor, causing synthetic mouth warping and skin texture smoothing."
+        },
+        {
+            "id": "fake_3",
+            "filename": "fake_sample_3_deepfake_reenactment.mp4",
+            "title": "DFDC Forensic Deepfake Benchmark",
+            "name": "DFDC Forensic Deepfake Benchmark",
+            "category": "fake",
+            "type": "Fake",
+            "badge_class": "sample-badge-fake",
+            "badge_color": "rose",
+            "duration": "10s",
+            "size": "2.8 MB",
+            "size_mb": 2.8,
+            "download_url": "/download_sample/fake_sample_3_deepfake_reenactment.mp4",
+            "run_url": "/run_sample/fake_sample_3_deepfake_reenactment.mp4",
+            "description": "Standardized Deepfake Detection Challenge manipulated clip with synthetic neural facial replacement."
+        },
+        {
+            "id": "fake_4",
+            "filename": "fake_sample_4_ai_synthesis.mp4",
+            "title": "Generative AI Facial Synthesis",
+            "name": "Generative AI Facial Synthesis",
+            "category": "fake",
+            "type": "Fake",
+            "badge_class": "sample-badge-fake",
+            "badge_color": "rose",
+            "duration": "8s",
+            "size": "2.2 MB",
+            "size_mb": 2.2,
+            "download_url": "/download_sample/fake_sample_4_ai_synthesis.mp4",
+            "run_url": "/run_sample/fake_sample_4_ai_synthesis.mp4",
+            "description": "Fully AI-synthesized viral deepfake video with generative facial textures and altered temporal frequencies."
+        },
+        {
+            "id": "fake_5",
+            "filename": "fake_sample_5_lipsync_tampering.mp4",
+            "title": "Neural Lip-Sync Tampering",
+            "name": "Neural Lip-Sync Tampering",
+            "category": "fake",
+            "type": "Fake",
+            "badge_class": "sample-badge-fake",
+            "badge_color": "rose",
+            "duration": "10s",
+            "size": "3.5 MB",
+            "size_mb": 3.5,
+            "download_url": "/download_sample/fake_sample_5_lipsync_tampering.mp4",
+            "run_url": "/run_sample/fake_sample_5_lipsync_tampering.mp4",
+            "description": "Audio-driven synthetic lip sync deepfake demonstrating biometric mismatch between audio and lip articulators."
+        }
+    ]
+    return [v for v in catalog if os.path.exists(os.path.join(SAMPLE_VIDEOS_FOLDER, v["filename"]))]
+
+
+def process_video_investigation(filepath, unique_name, original_filename):
+    print()
+    print("=" * 70)
+    print("VIDEO ANALYSIS STARTED")
+    print("Video:", filepath)
+    print("=" * 70)
+
+    try:
+        video_result = detect_video(filepath)
+        print("VIDEO DETECTOR RETURNED:", video_result)
+
+        video_prediction = "Uncertain"
+        video_confidence = 0.0
+        video_risk = "Medium"
+        fake_frames = 0
+        real_frames = 0
+        uncertain_frames = 0
+        fake_percentage = 0.0
+        real_percentage = 0.0
+        uncertain_percentage = 0.0
+        average_fake_probability = 0.0
+        average_real_probability = 0.0
+
+        if isinstance(video_result, (tuple, list)):
+            result_length = len(video_result)
+            if result_length >= 11:
+                video_prediction = str(video_result[0])
+                video_confidence = safe_float(video_result[1])
+                video_risk = str(video_result[2])
+                fake_frames = safe_int(video_result[3])
+                real_frames = safe_int(video_result[4])
+                uncertain_frames = safe_int(video_result[5])
+                fake_percentage = safe_float(video_result[6])
+                real_percentage = safe_float(video_result[7])
+                uncertain_percentage = safe_float(video_result[8])
+                average_fake_probability = safe_float(video_result[9])
+                average_real_probability = safe_float(video_result[10])
+            elif result_length >= 5:
+                video_prediction = str(video_result[0])
+                video_confidence = safe_float(video_result[1])
+                video_risk = str(video_result[2])
+                average_fake_probability = safe_float(video_result[3])
+                average_real_probability = safe_float(video_result[4])
+            elif result_length >= 3:
+                video_prediction = str(video_result[0])
+                video_confidence = safe_float(video_result[1])
+                video_risk = str(video_result[2])
+            elif result_length >= 2:
+                video_prediction = str(video_result[0])
+                video_confidence = safe_float(video_result[1])
+                video_risk = get_risk(video_prediction, video_confidence)
+
+        video_confidence = safe_float(video_confidence)
+        fake_percentage = safe_float(fake_percentage)
+        real_percentage = safe_float(real_percentage)
+        uncertain_percentage = safe_float(uncertain_percentage)
+        average_fake_probability, average_real_probability = normalize_probabilities(
+            average_fake_probability, average_real_probability
+        )
+
+        if video_risk.lower() in {"unknown", "none", "unknown risk"}:
+            video_risk = get_risk(video_prediction, video_confidence)
+
+        # Save to database
+        if db is not None and Investigation is not None:
+            try:
+                inv_record = Investigation(
+                    filename=original_filename,
+                    result=video_prediction,
+                    confidence=round(video_confidence, 2),
+                    risk=video_risk,
+                    date=datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                )
+                db.session.add(inv_record)
+                db.session.commit()
+            except Exception as db_err:
+                db.session.rollback()
+                print("Database save error:", db_err)
+
+        # Generate PDF report
+        report_filename = None
+        if generate_report is not None:
+            try:
+                report_name = "deepfake_report_" + uuid.uuid4().hex + ".pdf"
+                report_path = os.path.join(REPORT_FOLDER, report_name)
+                generated = generate_report(
+                    filename=original_filename,
+                    result=video_prediction,
+                    confidence=video_confidence,
+                    risk=video_risk,
+                    fake_frames=fake_frames,
+                    real_frames=real_frames,
+                    uncertain_frames=uncertain_frames,
+                    fake_percentage=fake_percentage,
+                    real_percentage=real_percentage,
+                    uncertain_percentage=uncertain_percentage,
+                    average_fake_probability=average_fake_probability,
+                    average_real_probability=average_real_probability,
+                    output_path=report_path
+                )
+                if generated and os.path.exists(report_path):
+                    report_filename = report_name
+            except Exception as re:
+                print("PDF generation error:", re)
+
+        return render_template(
+            "result.html",
+            filename=original_filename,
+            file_type="VIDEO",
+            prediction=video_prediction,
+            confidence=round(video_confidence, 2),
+            fake_probability=round(average_fake_probability, 2),
+            real_probability=round(average_real_probability, 2),
+            risk=video_risk,
+            fake_frames=fake_frames,
+            real_frames=real_frames,
+            uncertain_frames=uncertain_frames,
+            fake_percentage=round(fake_percentage, 2),
+            real_percentage=round(real_percentage, 2),
+            uncertain_percentage=round(uncertain_percentage, 2),
+            uploaded_file="/uploads/videos/" + unique_name,
+            video_url="/uploads/videos/" + unique_name,
+            report_filename=report_filename,
+            date=datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            error=None
+        )
+
+    except Exception as error:
+        print("VIDEO ANALYSIS ERROR:", error)
+        return render_template(
+            "result.html",
+            filename=original_filename,
+            file_type="VIDEO",
+            prediction="Error",
+            confidence=0,
+            fake_probability=0,
+            real_probability=0,
+            risk="Unknown",
+            fake_frames=0,
+            real_frames=0,
+            uncertain_frames=0,
+            fake_percentage=0,
+            real_percentage=0,
+            uncertain_percentage=0,
+            uploaded_file=None,
+            video_url=None,
+            report_filename=None,
+            date=datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            error=str(error)
+        )
+
+
+# ============================================================
 # HOME PAGE
 # ============================================================
 
 @app.route("/")
 def index():
-
     return render_template(
-        "index.html"
+        "index.html",
+        sample_videos=get_sample_videos_catalog()
     )
+
+
+# ============================================================
+# SAMPLE VIDEOS DOWNLOAD & RUN ROUTES
+# ============================================================
+
+@app.route("/download_sample/<path:filename>")
+def download_sample(filename):
+    safe_name = os.path.basename(filename)
+    target = os.path.join(SAMPLE_VIDEOS_FOLDER, safe_name)
+    if not os.path.exists(target):
+        flash("Requested sample video file does not exist.")
+        return redirect(url_for("index"))
+    return send_from_directory(
+        SAMPLE_VIDEOS_FOLDER,
+        safe_name,
+        as_attachment=True
+    )
+
+
+@app.route("/download_all_samples")
+def download_all_samples():
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        readme = (
+            "============================================================\n"
+            "DEEPFAKE INVESTIGATION SYSTEM — BENCHMARK VIDEO DATASET\n"
+            "============================================================\n\n"
+            "This curated dataset archive includes verified Authentic (Real)\n"
+            "and Synthetic (Deepfake) videos for testing and benchmarking models.\n\n"
+            "CONTENTS:\n"
+        )
+        for item in get_sample_videos_catalog():
+            vpath = os.path.join(SAMPLE_VIDEOS_FOLDER, item["filename"])
+            if os.path.exists(vpath):
+                zf.write(vpath, arcname=item["filename"])
+                readme += f"• [{item['category'].upper()}] {item['filename']}\n"
+                readme += f"  Title: {item['title']}\n"
+                readme += f"  Description: {item['description']}\n"
+                readme += f"  Duration: {item['duration']} | Size: {item['size']}\n\n"
+        zf.writestr("BENCHMARK_README.txt", readme)
+    zip_buffer.seek(0)
+    return Response(
+        zip_buffer.getvalue(),
+        mimetype="application/zip",
+        headers={"Content-Disposition": "attachment; filename=deepfake_benchmark_sample_videos.zip"}
+    )
+
+
+@app.route("/run_sample/<path:filename>")
+def run_sample(filename):
+    safe_name = os.path.basename(filename)
+    sample_path = os.path.join(SAMPLE_VIDEOS_FOLDER, safe_name)
+    if not os.path.exists(sample_path):
+        flash("Requested sample video not found.")
+        return redirect(url_for("index"))
+
+    ext = get_extension(safe_name) or "mp4"
+    unique_name = f"sample_{uuid.uuid4().hex[:8]}.{ext}"
+    target_path = os.path.join(VIDEO_FOLDER, unique_name)
+    shutil.copyfile(sample_path, target_path)
+
+    return process_video_investigation(target_path, unique_name, safe_name)
+
+
+@app.route("/api/sample_videos")
+def api_sample_videos():
+    samples = get_sample_videos_catalog()
+    return jsonify({
+        "success": True,
+        "total": len(samples),
+        "samples": samples
+    })
 
 
 # ============================================================
@@ -1160,15 +1519,12 @@ def predict():
             filepath
         )
 
-
-        print()
-        print("=" * 70)
-        print("VIDEO ANALYSIS STARTED")
-        print("Video:", filepath)
-        print("=" * 70)
-
-
         try:
+            return process_video_investigation(
+                filepath,
+                unique_name,
+                original_filename
+            )
 
             # =================================================
             # CALL VIDEO DETECTOR
@@ -2101,7 +2457,7 @@ def dashboard():
 
             if total > 0:
                 avg_confidence = round(
-                    sum(float(r.confidence) for r in records) / total,
+                    sum(float(r.confidence if r.confidence is not None else 0.0) for r in records) / total,
                     2
                 )
         except Exception as e:
@@ -2134,7 +2490,7 @@ def history():
             ).all()
 
             data = [
-                [r.filename, r.result, round(float(r.confidence), 2), r.risk, r.date]
+                [r.filename, r.result, round(float(r.confidence if r.confidence is not None else 0.0), 2), r.risk, r.date]
                 for r in records
             ]
         except Exception as e:
@@ -2178,7 +2534,7 @@ def export_csv():
             r.id,
             r.filename,
             r.result,
-            round(float(r.confidence), 2),
+            round(float(r.confidence if r.confidence is not None else 0.0), 2),
             r.risk,
             r.date
         ])

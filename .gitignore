@@ -80,6 +80,8 @@ tmp_checkpoint/*
 *.mov
 *.mkv
 *.webm
+!sample_videos/*.mp4
+!sample_videos/README.md
 
 # ============================================================
 # MACHINE LEARNING MODELS

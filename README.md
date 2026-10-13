@@ -101,8 +101,12 @@ run.bat
 
 | Route | Method | Description |
 |---|---|---|
-| `/` | `GET` | Main Forensic Ingestion Studio with Drag & Drop |
+| `/` | `GET` | Main Forensic Ingestion Studio with Benchmark Gallery |
 | `/predict` | `POST` | Processes uploaded image/video and displays verdict |
+| `/download_sample/<filename>` | `GET` | Downloads individual authentic or deepfake benchmark video |
+| `/download_all_samples` | `GET` | Packages & downloads all benchmark videos in a ZIP bundle |
+| `/run_sample/<filename>` | `GET` | 1-Click instant forensic analysis on a benchmark video |
+| `/api/sample_videos` | `GET` | REST JSON catalog of all benchmark videos & metadata |
 | `/dashboard` | `GET` | Interactive KPI counters and Chart.js visualizations |
 | `/history` | `GET` | Searchable historical case registry |
 | `/export_csv` | `GET` | 1-Click download of case history as CSV |
@@ -110,6 +114,49 @@ run.bat
 | `/results` | `GET` | Empirical model benchmarks and confusion matrix |
 | `/about` | `GET` | Mission overview and technology specifications |
 | `/health` | `GET` | System heartbeat health check |
+
+---
+
+## 🎬 Benchmark Sample Videos Library
+
+The repository includes a curated benchmark dataset of verified **Authentic (Real)** and **Synthetic (Deepfake)** MP4 videos located in [`sample_videos/`](file:///c:/Users/jayan/OneDrive/Documents/Deepfake-investigation-system/sample_videos):
+
+| Category | Benchmark Video File | Manipulation / Technique | Size |
+|---|---|---|---|
+| **Authentic Real** | `real_sample_1_authentic_speaker.mp4` | Natural eye micro-movements, organic illumination | 4.8 MB |
+| **Authentic Real** | `real_sample_2_conversational_face.mp4` | Spontaneous conversational speech, zero manipulation | 4.8 MB |
+| **Synthetic Deepfake** | `fake_sample_1_neural_faceswap.mp4` | High-res neural identity face-swap with warp boundaries | 10.4 MB |
+| **Synthetic Deepfake** | `fake_sample_2_expression_manipulation.mp4` | Neural expression reenactment & mouth boundary warp | 4.3 MB |
+| **Synthetic Deepfake** | `fake_sample_3_deepfake_reenactment.mp4` | DFDC benchmark synthetic facial replacement | 2.7 MB |
+| **Synthetic Deepfake** | `fake_sample_4_ai_synthesis.mp4` | Fully generative AI facial synthesis & frequency shift | 2.1 MB |
+| **Synthetic Deepfake** | `fake_sample_5_lipsync_tampering.mp4` | Audio-driven synthetic lip sync biometric tampering | 3.4 MB |
+
+### Downloading & Testing Benchmark Videos
+
+#### 1. Via the Web Studio UI
+- Navigate to `http://127.0.0.1:5000#samplesSection`
+- Click **"⬇️ Download"** next to any video to download it individually.
+- Click **"📦 Download All (.zip)"** to download the complete benchmark archive in a single file with documentation.
+- Click **"⚡ Run Detect"** on any card to run immediate frame-by-frame forensics without re-uploading!
+
+#### 2. Via the Command Line Utility (`download_samples.py`)
+```bash
+# List all benchmark videos and details
+python download_samples.py --list
+
+# Download / export all samples to a local folder
+python download_samples.py --category all --outdir ./exported_videos
+
+# Export only authentic real videos to a folder
+python download_samples.py --category real --outdir ./real_videos
+
+# Package only deepfake videos into a standalone ZIP archive
+python download_samples.py --category fake --zip deepfakes_dataset.zip
+
+# Run instant forensic detection on a benchmark video from CLI
+python download_samples.py --detect real_sample_1_authentic_speaker.mp4
+python download_samples.py --detect fake_sample_1_neural_faceswap.mp4
+```
 
 ---
 
@@ -186,17 +233,22 @@ Deepfake-investigation-system/
 ├── predictor.py                # EfficientNet-B3 inference & face auto-crop pipeline
 ├── gradcam.py                  # Explainable AI (Grad-CAM) activation generator
 ├── video_detector.py           # Frame sampling & temporal sequence analyzer
+├── train_video_detector.py     # Multi-scale PyTorch video detector fine-tuner
+├── download_samples.py         # Benchmark video download & CLI forensic runner
+├── run_tests.py                # Comprehensive 9-phase automated test suite
 ├── pdf_report.py               # ReportLab forensic evidence PDF builder
 ├── database.py                 # SQLAlchemy SQLite data model
 ├── run.bat                     # 1-Click Windows execution launcher
 ├── requirements.txt            # Dependency specification
-├── deepfake_efficientnet_v3.keras # Trained deep learning neural network
+├── deepfake_detector_best.pt   # PyTorch Multi-Scale Neural Ensemble checkpoint
+├── deepfake_efficientnet_v3.keras # Keras deep learning neural network
+├── sample_videos/              # Curated Real & Deepfake benchmark video dataset
 ├── static/                     # Assets (architecture diagram, charts, favicon)
 │   ├── architecture.png
 │   ├── chart.png
 │   └── favicon.ico
 ├── templates/                  # Modern Glassmorphic Dark UI
-│   ├── index.html              # Drag-and-drop ingestion studio
+│   ├── index.html              # Drag-and-drop studio & Benchmark library
 │   ├── result.html             # Verdict & Grad-CAM heatmap view
 │   ├── dashboard.html          # Interactive charts & CSV export
 │   ├── history.html            # Case registry logs
